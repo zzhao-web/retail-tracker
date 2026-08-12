@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Operations Tracker Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pri:#4f46e5;--pri-l:#e0e7ff;--suc:#10b981;--suc-l:#d1fae5;--war:#f59e0b;--war-l:#fef3c7;--dan:#ef4444;--dan-l:#fee2e2;--inf:#3b82f6;--inf-l:#dbeafe;--bg:#f1f5f9;--srf:#fff;--txt:#1e293b;--mut:#64748b;--bdr:#e2e8f0;--r:8px;--sh:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 12px rgba(0,0,0,.1)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;overflow-x:hidden}
+input,select,textarea,button{font-family:inherit;font-size:inherit}
+input{font-size:16px}
+button{cursor:pointer;border:none;outline:none}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:var(--r);background:var(--pri);color:#fff;font-size:13px;transition:.15s;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn-sec{background:#f1f5f9;color:var(--txt)}
+.btn-sec:hover{background:#e2e8f0}
+.btn-dan{background:var(--dan)}
+.btn-sm{padding:3px 10px;font-size:12px}
+.btn-icon{padding:6px 8px;background:transparent;color:var(--mut)}
+.btn-icon:hover{background:#f1f5f9;color:var(--txt)}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;gap:12px;padding:0 16px;height:52px;background:var(--srf);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.logo{font-size:16px;font-weight:700;color:var(--pri);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.logo svg{width:20px;height:20px}
+.tb-sep{width:1px;height:24px;background:var(--bdr)}
+.proj-sel{display:flex;align-items:center;gap:6px}
+.proj-sel select{padding:5px 28px 5px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff;font-size:13px;font-weight:600;color:var(--pri);cursor:pointer;max-width:200px}
+.view-toggle{display:flex;background:#f1f5f9;border-radius:var(--r);padding:2px}
+.view-toggle button{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;background:transparent;color:var(--mut);transition:.15s}
+.view-toggle button.active{background:#fff;color:var(--pri);box-shadow:var(--sh)}
+.sync-stat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mut);padding:4px 10px;border-radius:20px;background:#f1f5f9}
+.sync-dot{width:8px;height:8px;border-radius:50%}
+.sync-dot.on{background:var(--suc)}.sync-dot.off{background:var(--mut)}.sync-dot.sync{background:var(--war)}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.room-box{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:var(--inf-l);font-size:12px;color:var(--inf);font-weight:600}
+.room-box.off{background:#f1f5f9;color:var(--mut)}
+.room-code{font-family:monospace;font-size:11px;letter-spacing:.5px}
+.room-input{padding:4px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-size:12px;width:120px}
+.room-modal{max-width:420px}
+.room-modal .room-id-display{font-family:monospace;font-size:18px;font-weight:700;color:var(--pri);text-align:center;padding:16px;background:var(--pri-l);border-radius:var(--r);letter-spacing:1px;word-break:break-all}
+.room-modal .share-link{font-size:12px;color:var(--mut);text-align:center;padding:8px;background:#f8fafc;border-radius:var(--r);word-break:break-all;margin-top:8px}
+.admin-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;border:1px solid transparent}
+.admin-badge.on{background:var(--suc-l);color:var(--suc);border-color:var(--suc)}
+.admin-badge.off{background:#f1f5f9;color:var(--mut);border-color:var(--bdr)}
+.admin-badge:hover{opacity:.85}
+.view-mode-hint{background:#fef3c7;color:#92400e;padding:8px 16px;text-align:center;font-size:12px;font-weight:600;border-bottom:1px solid #fde68a}
+.th-editable{position:relative}
+.th-editable:hover{background:#e0e7ff}
+.th-edit-hint{display:inline-block;margin-left:4px;opacity:0;font-size:11px;color:var(--pri);transition:.15s}
+.th-editable:hover .th-edit-hint{opacity:1}
+.th-edit-input{width:100%;padding:2px 4px;border:2px solid var(--pri);border-radius:4px;font-size:13px;font-weight:600;background:#fff;outline:none}
+.th-text{cursor:pointer}
+.th-sort{cursor:pointer;display:inline-block;margin-left:4px;padding:0 4px;border-radius:3px;opacity:.4;font-size:10px}
+.th-sort:hover{opacity:1;background:#e0e7ff}
+.th-sort.active{opacity:1;color:var(--pri);background:var(--pri-l)}
+.row-count{margin-left:auto;font-size:12px;color:var(--mut)}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;padding:0 16px;background:var(--srf);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:thin;height:42px}
+.tabs::-webkit-scrollbar{height:3px}
+.tab{padding:8px 16px;font-size:13px;font-weight:600;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;cursor:pointer}
+.tab:hover{color:var(--txt)}
+.tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+.tab .tab-icon{margin-right:4px}
+
+/* Content */
+.content{padding:16px;max-width:1400px;margin:0 auto}
+.content-pad{padding-bottom:env(safe-area-inset-bottom)}
+
+/* Dashboard */
+.dash-grid{display:grid;gap:12px}
+.dash-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.dcard{background:var(--srf);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.dcard-label{font-size:12px;color:var(--mut);margin-bottom:4px}
+.dcard-val{font-size:24px;font-weight:700}
+.dcard-sub{font-size:11px;color:var(--mut);margin-top:2px}
+.section-title{font-size:15px;font-weight:700;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+.section-title .st-action{margin-left:auto}
+.today-box{background:var(--srf);border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh);margin-bottom:16px}
+.today-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--f5f5f5)}
+.today-item:last-child{border-bottom:none}
+.today-tag{font-size:11px;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap}
+.today-tag.overdue{background:var(--dan-l);color:var(--dan)}
+.today-tag.today{background:var(--war-l);color:var(--war)}
+.today-tag.soon{background:var(--inf-l);color:var(--inf)}
+.today-task{flex:1;font-size:13px}
+.today-meta{font-size:11px;color:var(--mut)}
+.proj-card{background:var(--srf);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);border-left:4px solid var(--pri);cursor:pointer;transition:.15s}
+.proj-card:hover{box-shadow:var(--sh2)}
+.proj-card h3{font-size:14px;margin-bottom:6px}
+.proj-stats{display:flex;gap:16px;font-size:12px;color:var(--mut)}
+.proj-stats span b{color:var(--txt)}
+
+/* Tables */
+.tbl-wrap{background:var(--srf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.tbl-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bdr);flex-wrap:wrap}
+.tbl-bar input,.tbl-bar select{padding:5px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:13px}
+.tbl-bar input{flex:1;min-width:120px}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:8px 10px;text-align:left;font-weight:600;color:var(--mut);background:#f8fafc;border-bottom:2px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:5}
+th:hover{background:#f1f5f9}
+th .sort-ind{font-size:10px;opacity:.5}
+td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:hover td{background:#fafbff}
+.td-edit{cursor:text;min-height:28px;border-radius:4px;padding:3px 6px;transition:.1s}
+.td-edit:hover{background:var(--pri-l)}
+.cell-edit{width:100%;padding:3px 6px;border:1px solid var(--pri);border-radius:4px;font-size:13px;outline:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.prog-bar{width:60px;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle}
+.prog-fill{height:100%;border-radius:4px;transition:.3s}
+.del-btn{color:var(--mut);cursor:pointer;padding:2px;border-radius:4px;opacity:0;transition:.15s}
+tr:hover .del-btn{opacity:1}
+.del-btn:hover{color:var(--dan);background:var(--dan-l)}
+th:last-child,.td-action{width:32px;text-align:center}
+.empty-row{text-align:center;color:var(--mut);padding:32px 16px}
+
+/* Person view */
+.pv-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.pv-card{background:var(--srf);border-radius:var(--r);padding:16px;box-shadow:var(--sh);text-align:center}
+.pv-card .pv-val{font-size:28px;font-weight:700}
+.pv-card .pv-label{font-size:12px;color:var(--mut);margin-top:4px}
+.pv-ring{display:flex;justify-content:center;margin-bottom:12px}
+.pv-group{background:var(--srf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.pv-group-hd{padding:8px 14px;background:#f8fafc;font-weight:600;font-size:13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
+.pv-item{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #f8fafc;font-size:13px}
+.pv-item:last-child{border-bottom:none}
+.pv-item-name{flex:1;font-weight:500}
+.pv-item-meta{font-size:12px;color:var(--mut)}
+
+/* Flowchart */
+.fc-wrap{background:var(--srf);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.fc-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bdr);flex-wrap:wrap}
+.fc-bar select{padding:5px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:13px}
+.fc-tools{display:flex;gap:4px;margin-left:auto}
+.fc-tool{padding:4px 10px;border-radius:6px;font-size:12px;background:#f1f5f9;color:var(--txt);display:flex;align-items:center;gap:4px;transition:.15s}
+.fc-tool:hover{background:#e2e8f0}
+.fc-tool.active{background:var(--pri);color:#fff}
+.fc-canvas{position:relative;background:#f8fafc;background-image:radial-gradient(#e2e8f0 1px,transparent 1px);background-size:20px 20px;min-height:500px;overflow:hidden}
+.fc-canvas svg{width:100%;height:500px;display:block}
+.fc-node{cursor:move}
+.fc-node:hover{filter:brightness(.97)}
+.fc-edge{cursor:pointer;transition:.15s}
+.fc-edge:hover{stroke-width:3}
+.fc-edit-input{position:absolute;transform:translate(-50%,-50%);padding:4px 8px;border:2px solid var(--pri);border-radius:4px;font-size:13px;outline:none;z-index:10}
+.fc-empty{text-align:center;padding:60px 20px;color:var(--mut)}
+
+/* Management */
+.mgmt-tabs{display:flex;gap:4px;margin-bottom:16px}
+.mgmt-tab{padding:6px 16px;border-radius:var(--r) var(--r) 0 0;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent}
+.mgmt-tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+.mgmt-section{background:var(--srf);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:16px}
+.mgmt-list{display:flex;flex-direction:column;gap:8px}
+.mgmt-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--r);transition:.15s}
+.mgmt-item:hover{border-color:var(--pri)}
+.mgmt-item-name{font-weight:600;flex:1}
+.mgmt-item-meta{font-size:12px;color:var(--mut)}
+.color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+.field-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bdr);border-radius:6px;margin-bottom:6px}
+.field-row select,.field-row input{padding:4px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px}
+.opt-row{display:flex;align-items:center;gap:6px;padding:4px 0}
+.opt-row input{flex:1;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;font-size:12px}
+.color-pick{display:flex;gap:4px}
+.color-pick span{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.1s}
+.color-pick span.sel{border-color:var(--txt)}
+.checkbox-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.checkbox-row input{width:auto}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--srf);border-radius:12px;box-shadow:var(--sh2);max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-hd{padding:16px 20px;border-bottom:1px solid var(--bdr);font-weight:700;font-size:16px;display:flex;align-items:center}
+.modal-hd .close{margin-left:auto;cursor:pointer;color:var(--mut);font-size:20px;padding:4px}
+.modal-bd{padding:20px}
+.modal-ft{padding:12px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:600}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--txt);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:2000;box-shadow:var(--sh2);animation:toastIn .3s}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* Responsive */
+@media(max-width:768px){
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;gap:8px}
+  .logo{font-size:14px}
+  .tb-sep{display:none}
+  .proj-sel{order:3;width:100%}
+  .proj-sel select{width:100%;max-width:none}
+  .view-toggle{order:4}
+  .sync-stat{order:5;font-size:11px}
+  .room-box{order:5;font-size:11px;flex-wrap:wrap}
+  .tb-right{order:2}
+  .content{padding:10px}
+  .tabs{padding:0 8px}
+  .tab{padding:6px 10px;font-size:12px}
+  .dash-cards{grid-template-columns:repeat(2,1fr)}
+  .dcard-val{font-size:20px}
+  table{font-size:12px}
+  th,td{padding:5px 6px}
+  .prog-bar{width:40px}
+  .form-grid{grid-template-columns:1fr}
+  .modal{max-width:100%;border-radius:8px}
+  .fc-canvas svg{height:350px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar"></div>
+<div class="tabs" id="tabs"></div>
+<div class="content content-pad" id="content"></div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+// ===== STATE =====
+let S = null;
+let U = {
+  view: 'project',
+  proj: 'all',
+  person: null,
+  tab: 'dashboard',
+  search: {},
+  filter: {},
+  sort: {},
+  syncMode: 'offline',
+  onlineUsers: 0,
+  fcChart: null,
+  fcSelected: null,
+  fcConnect: false,
+  fcConnectFrom: null,
+  isAdmin: false,
+  adminMode: false
+};
+
+const ADMIN_PASSWORD = 'admin';
+const COLORS = ['#4f46e5','#0d9488','#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#ec4899','#14b8a6','#6366f1'];
+const FC_TYPES = {
+  start: {fill:'#d1fae5',stroke:'#10b981',rx:25,label:'Start'},
+  process: {fill:'#dbeafe',stroke:'#3b82f6',rx:6,label:'Process'},
+  decision: {fill:'#fef3c7',stroke:'#f59e0b',rx:0,label:'Decision'},
+  end: {fill:'#fee2e2',stroke:'#ef4444',rx:25,label:'End'}
+};
+
+// ===== DEFAULT DATA =====
+function getDefaultData() {
+  return {
+    version: 4,
+    projects: [
+      {id:'p1',name:'East China Expansion',color:'#4f46e5',personIds:['ps1','ps2'],boardIds:['b1','b2','b4']},
+      {id:'p2',name:'South China Supply Chain',color:'#0d9488',personIds:['ps2','ps3'],boardIds:['b1','b3']}
+    ],
+    persons: [
+      {id:'ps1',name:'Alice',color:'#10b981'},
+      {id:'ps2',name:'Bob',color:'#3b82f6'},
+      {id:'ps3',name:'Carol',color:'#f59e0b'},
+      {id:'ps4',name:'David',color:'#8b5cf6'}
+    ],
+    boards: [
+      {id:'b1',name:'Tasks',icon:'📋',fields:[
+        {id:'f1',name:'Task Name',type:'text',required:true},
+        {id:'f2',name:'Owner',type:'person',required:true},
+        {id:'f3',name:'Status',type:'select',isStatus:true,options:[
+          {value:'Pending',color:'#94a3b8'},{value:'In Progress',color:'#3b82f6'},
+          {value:'Completed',color:'#10b981'},{value:'Delayed',color:'#ef4444'}
+        ]},
+        {id:'f4',name:'Priority',type:'select',options:[
+          {value:'P0',color:'#ef4444'},{value:'P1',color:'#f59e0b'},{value:'P2',color:'#64748b'}
+        ]},
+        {id:'f5',name:'Progress',type:'number',isProgress:true},
+        {id:'f6',name:'Start Date',type:'date'},
+        {id:'f7',name:'Due Date',type:'date'}
+      ]},
+      {id:'b2',name:'Purchase Orders',icon:'📦',fields:[
+        {id:'f1',name:'Order No.',type:'text',required:true},
+        {id:'f2',name:'Supplier',type:'text'},
+        {id:'f3',name:'Category',type:'text'},
+        {id:'f4',name:'Owner',type:'person'},
+        {id:'f5',name:'Amount (¥)',type:'number'},
+        {id:'f6',name:'Quantity',type:'number'},
+        {id:'f7',name:'Status',type:'select',isStatus:true,options:[
+          {value:'Awaiting',color:'#94a3b8'},{value:'Ordered',color:'#3b82f6'},
+          {value:'In Transit',color:'#f59e0b'},{value:'Delivered',color:'#10b981'},{value:'Stored',color:'#8b5cf6'}
+        ]},
+        {id:'f8',name:'ETA',type:'date'}
+      ]},
+      {id:'b3',name:'Product Selection',icon:'🏷️',fields:[
+        {id:'f1',name:'Product Name',type:'text',required:true},
+        {id:'f2',name:'Category',type:'text'},
+        {id:'f3',name:'Brand',type:'text'},
+        {id:'f4',name:'Rating',type:'number'},
+        {id:'f5',name:'Price (¥)',type:'number'},
+        {id:'f6',name:'Margin (%)',type:'number'},
+        {id:'f7',name:'Status',type:'select',isStatus:true,options:[
+          {value:'Pending Review',color:'#94a3b8'},{value:'Selected',color:'#3b82f6'},
+          {value:'Listed',color:'#10b981'},{value:'Eliminated',color:'#ef4444'}
+        ]}
+      ]},
+      {id:'b4',name:'Brand Library',icon:'🤝',fields:[
+        {id:'f1',name:'Brand Name',type:'text',required:true},
+        {id:'f2',name:'Category',type:'text'},
+        {id:'f3',name:'Contact',type:'text'},
+        {id:'f4',name:'Owner',type:'person'},
+        {id:'f5',name:'Cooperation Mode',type:'text'},
+        {id:'f6',name:'Status',type:'select',isStatus:true,options:[
+          {value:'Interested',color:'#94a3b8'},{value:'Negotiating',color:'#f59e0b'},
+          {value:'Signed',color:'#10b981'},{value:'Paused',color:'#ef4444'}
+        ]},
+        {id:'f7',name:'Follow-up Date',type:'date'}
+      ]}
+    ],
+    records: {
+      b1: [
+        {id:'r1',projectId:'p1',f1:'Market Research Report',f2:'ps1',f3:'Completed',f4:'P1',f5:100,f6:'2026-07-20',f7:'2026-07-30'},
+        {id:'r2',projectId:'p1',f1:'Supplier Visit Plan',f2:'ps2',f3:'In Progress',f4:'P0',f5:60,f6:'2026-07-25',f7:'2026-08-10'},
+        {id:'r3',projectId:'p1',f1:'First Sample Testing',f2:'ps1',f3:'Delayed',f4:'P1',f5:40,f6:'2026-07-28',f7:'2026-08-05'},
+        {id:'r4',projectId:'p2',f1:'Warehouse Site Assessment',f2:'ps2',f3:'Pending',f4:'P2',f5:0,f6:'2026-08-10',f7:'2026-08-20'},
+        {id:'r5',projectId:'p2',f1:'Logistics Negotiation',f2:'ps3',f3:'In Progress',f4:'P1',f5:30,f6:'2026-08-01',f7:'2026-08-15'}
+      ],
+      b2: [
+        {id:'r1',projectId:'p1',f1:'PO-2026-001',f2:'East China Supplier A',f3:'Daily Goods',f4:'ps1',f5:50000,f6:200,f7:'In Transit',f8:'2026-08-12'},
+        {id:'r2',projectId:'p1',f1:'PO-2026-002',f2:'East China Supplier B',f3:'Food',f4:'ps2',f5:30000,f6:150,f7:'Ordered',f8:'2026-08-18'}
+      ],
+      b3: [
+        {id:'r1',projectId:'p2',f1:'Portable Thermos',f2:'Daily Goods',f3:'Brand X',f4:4.5,f5:59,f6:35,f7:'Selected'},
+        {id:'r2',projectId:'p2',f1:'Eco Shopping Bag',f2:'Daily Goods',f3:'Brand Y',f4:4.2,f5:19,f6:50,f7:'Pending Review'}
+      ],
+      b4: [
+        {id:'r1',projectId:'p1',f1:'Brand Alpha',f2:'Daily Goods',f3:'Contact A',f4:'ps1',f5:'Exclusive Agency',f6:'Negotiating',f7:'2026-08-06'},
+        {id:'r2',projectId:'p1',f1:'Brand Beta',f2:'Food',f3:'Contact B',f4:'ps2',f5:'Distribution',f6:'Signed',f7:'2026-07-28'}
+      ]
+    },
+    flowcharts: [
+      {id:'fc1',projectId:'p1',name:'East China Main Process',nodes:[
+        {id:'n1',x:60,y:250,w:100,h:50,text:'Project Start',type:'start'},
+        {id:'n2',x:240,y:250,w:120,h:50,text:'Market Research',type:'process'},
+        {id:'n3',x:440,y:250,w:120,h:50,text:'Supplier Filter',type:'process'},
+        {id:'n4',x:640,y:180,w:120,h:80,text:'Sample Pass?',type:'decision'},
+        {id:'n5',x:640,y:340,w:120,h:50,text:'Re-select',type:'process'},
+        {id:'n6',x:840,y:250,w:100,h:50,text:'Project Launch',type:'end'}
+      ],edges:[
+        {id:'e1',from:'n1',to:'n2'},{id:'e2',from:'n2',to:'n3'},
+        {id:'e3',from:'n3',to:'n4'},{id:'e4',from:'n4',to:'n6'},
+        {id:'e5',from:'n4',to:'n5'},{id:'e6',from:'n5',to:'n3'}
+      ]}
+    ]
+  };
+}
+
+// ===== INIT =====
+async function init() {
+  // Try server
+  try {
+    const r = await fetch('/api/state');
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.boards) {
+        S = data;
+        U.syncMode = 'online';
+        connectSSE();
+      }
+    }
+  } catch {}
+  if (!S) {
+    S = loadLocal() || getDefaultData();
+    U.syncMode = 'offline';
+  }
+  // Try cloud sync if not in server mode
+  if (U.syncMode === 'offline') {
+    cloudInit();
+  }
+  setupEvents();
+  render();
+}
+
+// ===== SYNC =====
+let sse = null;
+let saveTimer = null;
+let isReceiving = false;
+
+function connectSSE() {
+  try {
+    sse = new EventSource('/api/events');
+    sse.onmessage = (e) => {
+      if (isReceiving) return;
+      try {
+        const data = JSON.parse(e.data);
+        isReceiving = true;
+        S = data;
+        render();
+        isReceiving = false;
+      } catch {}
+    };
+    sse.addEventListener('clients', (e) => {
+      try { U.onlineUsers = JSON.parse(e.data).count; renderTopbar(); } catch {}
+    });
+    sse.onerror = () => { U.syncMode = 'offline'; renderTopbar(); };
+  } catch {}
+}
+
+function save() {
+  if (isReceiving) return;
+  if (U.syncMode === 'online') {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      fetch('/api/state', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)})
+        .then(()=>{U.syncMode='online';renderTopbar();})
+        .catch(()=>{U.syncMode='offline';renderTopbar();});
+    }, 400);
+  }
+  if (cloudRoom) {
+    clearTimeout(cloudPushTimer);
+    cloudPushTimer = setTimeout(cloudPush, 500);
+  }
+  saveLocal();
+}
+
+function saveLocal() {
+  try { localStorage.setItem('retailTrackerV4', JSON.stringify(S)); } catch {}
+}
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem('retailTrackerV4')); } catch { return null; }
+}
+
+// ===== CLOUD SYNC (jsonblob.com) =====
+const CLOUD_API='https://jsonblob.com/api/jsonBlob';
+let cloudRoom=null;
+let cloudPollTimer=null;
+let cloudPushTimer=null;
+let cloudBusy=false;
+let lastCloudTs=0;
+
+function cloudInit(){
+  let m=location.hash.match(/room=([\w-]+)/);
+  if(m)cloudJoinRoom(m[1]);
+}
+
+function cloudCreateRoom(){
+  if(cloudBusy)return;
+  cloudBusy=true;
+  S._ts=Date.now();
+  showToast('Creating collaboration room...');
+  fetch(CLOUD_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)})
+    .then(r=>{let loc=r.headers.get('Location');if(!loc)throw new Error('no location');return loc.split('/').pop()})
+    .then(id=>{
+      cloudRoom=id;location.hash=`room=${id}`;U.syncMode='cloud';
+      cloudStartPolling();cloudBusy=false;
+      showRoomModal(id);renderTopbar();
+    })
+    .catch(()=>{showToast('Failed to create room. Check network.');cloudBusy=false});
+}
+
+function cloudJoinRoom(id){
+  if(cloudBusy)return;
+  cloudBusy=true;
+  showToast('Joining room...');
+  fetch(`${CLOUD_API}/${id}`)
+    .then(r=>{if(!r.ok)throw new Error('not found');return r.json()})
+    .then(data=>{
+      if(data&&data.boards){
+        S=data;saveLocal();cloudRoom=id;U.syncMode='cloud';
+        lastCloudTs=data._ts||0;
+        cloudStartPolling();cloudBusy=false;render();showToast('Joined collaboration room');
+      }else throw new Error('invalid data');
+    })
+    .catch(()=>{showToast('Room not found or expired');location.hash='';cloudBusy=false});
+}
+
+function cloudPush(){
+  if(!cloudRoom||cloudBusy)return;
+  S._ts=Date.now();
+  fetch(`${CLOUD_API}/${cloudRoom}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)})
+    .catch(()=>{});
+}
+
+function cloudPull(){
+  if(!cloudRoom||cloudBusy)return;
+  fetch(`${CLOUD_API}/${cloudRoom}`)
+    .then(r=>{if(!r.ok){if(r.status===404){cloudRoom=null;U.syncMode='offline';location.hash='';clearInterval(cloudPollTimer);showToast('Room expired. Data saved locally.');renderTopbar()}throw new Error('err')};return r.json()})
+    .then(data=>{
+      if(data&&data.boards&&(data._ts||0)>(S._ts||0)){
+        S=data;saveLocal();render();
+      }
+      lastCloudTs=data._ts||0;
+    })
+    .catch(()=>{});
+}
+
+function cloudStartPolling(){
+  if(cloudPollTimer)clearInterval(cloudPollTimer);
+  cloudPollTimer=setInterval(cloudPull,3000);
+}
+
+function cloudLeave(){
+  if(cloudPollTimer)clearInterval(cloudPollTimer);
+  cloudPollTimer=null;cloudRoom=null;location.hash='';
+  U.syncMode='offline';renderTopbar();showToast('Left collaboration room');
+}
+
+function showRoomModal(id){
+  let url=location.origin+location.pathname+`#room=${id}`;
+  showModal(`<div class="modal-hd">Collaboration Room Created<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd room-modal">
+      <p style="font-size:13px;color:var(--mut);margin-bottom:12px">Share the link below with your colleagues so they can edit together:</p>
+      <div class="room-id-display">${esc(id)}</div>
+      <div class="share-link">${esc(url)}</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-sec" onclick="hideModal()">Close</button>
+      <button class="btn" onclick="copyRoomLink('${id}')">Copy Link</button>
+    </div>`);
+}
+
+function copyRoomLink(id){
+  let url=location.origin+location.pathname+`#room=${id}`;
+  navigator.clipboard.writeText(url).then(()=>showToast('Link copied to clipboard!')).catch(()=>{
+    let ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Link copied');
+  });
+}
+
+function showJoinModal(){
+  showModal(`<div class="modal-hd">Join Collaboration Room<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd room-modal">
+      <p style="font-size:13px;color:var(--mut);margin-bottom:12px">Enter the Room ID shared by your colleague, or open their link directly:</p>
+      <input type="text" id="joinRoomInput" class="room-input" style="width:100%;padding:10px;font-size:14px" placeholder="Paste Room ID or link" autofocus>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-sec" onclick="hideModal()">Cancel</button>
+      <button class="btn" onclick="doJoinRoom()">Join</button>
+    </div>`);
+  setTimeout(()=>{let el=document.getElementById('joinRoomInput');if(el)el.onkeydown=e=>{if(e.key==='Enter')doJoinRoom()}},50);
+}
+
+function doJoinRoom(){
+  let val=document.getElementById('joinRoomInput').value.trim();
+  if(!val){showToast('Please enter a room ID');return}
+  let id=val;
+  let m=val.match(/room=([\w-]+)/);
+  if(m)id=m[1];
+  hideModal();cloudJoinRoom(id);
+}
+
+// ===== ADMIN AUTH =====
+function toggleAdminMode(){
+  if(U.isAdmin){
+    U.isAdmin=false;
+    U.adminMode=false;
+    showToast('Switched to View Mode');
+    render();
+  } else {
+    showAdminLoginModal();
+  }
+}
+
+function showAdminLoginModal(){
+  showModal(`<div class="modal-hd">Admin Login<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--mut);margin-bottom:12px">Enter the admin password to enable editing</p>
+      <input type="password" id="adminPass" style="width:100%;padding:10px;border:1px solid var(--bdr);border-radius:6px;font-size:14px" placeholder="Password" autofocus>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-sec" onclick="hideModal()">Cancel</button>
+      <button class="btn" onclick="doAdminLogin()">Login</button>
+    </div>`);
+  setTimeout(()=>{
+    let el=document.getElementById('adminPass');
+    if(el)el.onkeydown=e=>{if(e.key==='Enter')doAdminLogin()};
+  },50);
+}
+
+function doAdminLogin(){
+  let pw=document.getElementById('adminPass').value;
+  if(pw===ADMIN_PASSWORD){
+    U.isAdmin=true;
+    U.adminMode=true;
+    hideModal();
+    render();
+    showToast('Admin Mode enabled');
+  } else {
+    showToast('Incorrect password');
+  }
+}
+
+// ===== UTILS =====
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function daysUntil(dateStr){if(!dateStr)return null;const d=new Date(dateStr);const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000)}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+function showToast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),2500)}
+
+function getProject(id){return S.projects.find(p=>p.id===id)}
+function getPerson(id){return S.persons.find(p=>p.id===id)}
+function getBoard(id){return S.boards.find(b=>b.id===id)}
+function getBoardRecords(bid){return S.records[bid]||[]}
+function getStatusField(b){return b.fields.find(f=>f.isStatus)}
+function getPersonField(b){return b.fields.find(f=>f.type==='person')}
+function getProgressField(b){return b.fields.find(f=>f.isProgress)}
+function getProjectPersons(pid){
+  if(!pid||pid==='all')return S.persons;
+  const p=getProject(pid);return p&&p.personIds?p.personIds.map(id=>getPerson(id)).filter(Boolean):S.persons;
+}
+function getVisibleBoards(pid){
+  if(!pid||pid==='all')return S.boards;
+  const p=getProject(pid);return p&&p.boardIds?p.boardIds.map(id=>getBoard(id)).filter(Boolean):S.boards;
+}
+function filterRecords(bid,pid){
+  let recs=getBoardRecords(bid);
+  if(pid&&pid!=='all')recs=recs.filter(r=>r.projectId===pid);
+  return recs;
+}
+
+// ===== RENDER =====
+function render() {
+  renderTopbar();
+  renderTabs();
+  renderContent();
+}
+
+function renderTopbar() {
+  const tb = document.getElementById('topbar');
+  let projOpts = '<option value="all">All Projects</option>' + S.projects.map(p=>`<option value="${p.id}" ${U.proj===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
+  let personOpts = '<option value="">Select Person...</option>' + S.persons.map(p=>`<option value="${p.id}" ${U.person===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
+  let syncLabel, syncClass, syncIcon;
+  if(U.syncMode==='online'){
+    syncLabel=`Connected · ${U.onlineUsers} online`;syncClass='on';
+    syncIcon='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>';
+  } else if(U.syncMode==='cloud'&&cloudRoom){
+    syncLabel='Cloud Sync';syncClass='sync';
+    syncIcon='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>';
+  } else {
+    syncLabel='Local Mode';syncClass='off';
+    syncIcon='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>';
+  }
+  let roomHtml='';
+  if(U.syncMode==='cloud'&&cloudRoom){
+    let shortId=cloudRoom.slice(-8);
+    roomHtml=`<div class="room-box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Room: <span class="room-code">${esc(shortId)}</span><button class="btn btn-sm" style="padding:1px 8px;font-size:11px;margin-left:4px" onclick="copyRoomLink('${cloudRoom}')">Copy</button><button class="btn btn-sec btn-sm" style="padding:1px 8px;font-size:11px" onclick="cloudLeave()">Leave</button></div>`;
+  } else if(U.syncMode==='offline'){
+    roomHtml=`<button class="btn btn-sm" onclick="cloudCreateRoom()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Create Room</button><button class="btn btn-sec btn-sm" onclick="showJoinModal()">Join Room</button>`;
+  }
+  let adminBadge = U.isAdmin
+    ? `<div class="admin-badge on" onclick="toggleAdminMode()" title="Click to switch to View Mode">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Admin
+      </div>`
+    : `<div class="admin-badge off" onclick="toggleAdminMode()" title="Click to enter Admin Mode">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        View
+      </div>`;
+  tb.innerHTML = `
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6M3 15h6M15 9h6M15 15h6"/></svg>Tracker Pro</div>
+    <div class="tb-sep"></div>
+    ${U.view==='project' ? `<div class="proj-sel"><select id="projSelect" onchange="U.proj=this.value;U.tab='dashboard';render()">${projOpts}</select></div>` : ''}
+    ${U.view==='person' ? `<div class="proj-sel"><select id="personSelect" onchange="U.person=this.value;render()">${personOpts}</select></div>` : ''}
+    <div class="view-toggle">
+      <button class="${U.view==='project'?'active':''}" onclick="U.view='project';U.tab='dashboard';render()">Project</button>
+      <button class="${U.view==='person'?'active':''}" onclick="U.view='person';U.tab='person';render()">Person</button>
+    </div>
+    ${roomHtml}
+    ${adminBadge}
+    <div class="sync-stat">${syncIcon}<span class="sync-dot ${syncClass}"></span>${syncLabel}</div>
+    <div class="tb-right">
+      <button class="btn btn-sec btn-sm" onclick="exportJSON()">Export</button>
+      <button class="btn btn-sec btn-sm" onclick="importJSON()">Import</button>
+    </div>
+  `;
+}
+
+function renderTabs() {
+  let tabs = document.getElementById('tabs');
+  if (U.view === 'person') {
+    tabs.innerHTML = `<div class="tab active">Person View</div>`;
+    return;
+  }
+  let html = `<div class="tab ${U.tab==='dashboard'?'active':''}" onclick="U.tab='dashboard';render()">Overview</div>`;
+  let boards = U.proj==='all' ? S.boards : getVisibleBoards(U.proj);
+  for (let b of boards) {
+    html += `<div class="tab ${U.tab===b.id?'active':''}" onclick="U.tab='${b.id}';render()">${b.icon} ${esc(b.name)}</div>`;
+  }
+  if (U.proj !== 'all') {
+    html += `<div class="tab ${U.tab==='flowchart'?'active':''}" onclick="U.tab='flowchart';render()">Flow</div>`;
+  }
+  if (U.isAdmin) {
+    html += `<div class="tab ${U.tab==='manage'?'active':''}" onclick="U.tab='manage';render()">Manage</div>`;
+  }
+  tabs.innerHTML = html;
+}
+
+function renderContent() {
+  let c = document.getElementById('content');
+  if (U.view === 'person') { c.innerHTML = renderPersonView(); return; }
+  if (U.tab === 'dashboard') { c.innerHTML = renderDashboard(); return; }
+  if (U.tab === 'flowchart') { c.innerHTML = renderFlowchart(); setupFcEvents(); return; }
+  if (U.tab === 'manage') { c.innerHTML = renderManagement(); return; }
+  let b = getBoard(U.tab);
+  if (b) { c.innerHTML = renderBoardTable(b); return; }
+  c.innerHTML = '<p style="color:var(--mut);text-align:center;padding:40px">Select a board to start</p>';
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  let today = todayStr();
+  let allTasks = [];
+  let boards = U.proj==='all'?S.boards:getVisibleBoards(U.proj);
+  for (let b of boards) {
+    let recs = filterRecords(b.id, U.proj);
+    let sf = getStatusField(b);
+    let pf = getProgressField(b);
+    let dlf = b.fields.find(f=>f.name.toLowerCase().includes('due')||f.name.toLowerCase().includes('eta')||f.name.toLowerCase().includes('follow'));
+    for (let r of recs) {
+      let status = sf ? r[sf.id] : '';
+      let progress = pf ? r[pf.id] : null;
+      let deadline = dlf ? r[dlf.id] : null;
+      allTasks.push({board:b,rec:r,status,progress,deadline,taskName:r[b.fields[0].id]||'(Untitled)'});
+    }
+  }
+  let overdue = allTasks.filter(t=>t.deadline&&t.status&&!isCompletedStatus(t.status)&&daysUntil(t.deadline)<0);
+  let dueToday = allTasks.filter(t=>t.deadline&&daysUntil(t.deadline)===0&&!isCompletedStatus(t.status||''));
+  let dueSoon = allTasks.filter(t=>t.deadline&&daysUntil(t.deadline)>0&&daysUntil(t.deadline)<=3&&!isCompletedStatus(t.status||''));
+  let completed = allTasks.filter(t=>isCompletedStatus(t.status||''));
+  let inProgress = allTasks.filter(t=>(t.status||'').toLowerCase().includes('progress'));
+  let total = allTasks.length;
+  let compRate = total ? Math.round(completed.length/total*100) : 0;
+
+  let todayHtml = '';
+  if (overdue.length||dueToday.length||dueSoon.length) {
+    let items = [...overdue.map(t=>({...t,tag:'overdue',tagLabel:'Overdue'})),
+                 ...dueToday.map(t=>({...t,tag:'today',tagLabel:'Today'})),
+                 ...dueSoon.map(t=>({...t,tag:'soon',tagLabel:'Soon'}))];
+    todayHtml = `<div class="today-box"><div style="font-weight:700;margin-bottom:8px;font-size:14px">Today's Tasks</div>`;
+    for (let t of items.slice(0,12)) {
+      let p = getProject(t.rec.projectId);
+      let person = '';
+      let pfield = getPersonField(t.board);
+      if (pfield) { let pp=getPerson(t.rec[pfield.id]); if(pp)person=pp.name; }
+      todayHtml += `<div class="today-item">
+        <span class="today-tag ${t.tag}">${t.tagLabel}</span>
+        <span class="today-task">${esc(t.taskName)}${p?' · '+esc(p.name):''}${person?' · '+esc(person):''}</span>
+        <span class="today-meta">${t.deadline}</span>
+      </div>`;
+    }
+    todayHtml += `</div>`;
+  }
+
+  let cards = `<div class="dash-cards">
+    <div class="dcard"><div class="dcard-label">Total Tasks</div><div class="dcard-val">${total}</div><div class="dcard-sub">${U.proj==='all'?'All Projects':esc(getProject(U.proj)?.name||'')}</div></div>
+    <div class="dcard"><div class="dcard-label">Completed</div><div class="dcard-val" style="color:var(--suc)">${completed.length}</div><div class="dcard-sub">${compRate}% complete</div></div>
+    <div class="dcard"><div class="dcard-label">In Progress</div><div class="dcard-val" style="color:var(--inf)">${inProgress.length}</div></div>
+    <div class="dcard"><div class="dcard-label">Overdue</div><div class="dcard-val" style="color:var(--dan)">${overdue.length}</div><div class="dcard-sub">Need attention</div></div>
+  </div>`;
+
+  let projHtml = '';
+  if (U.proj==='all') {
+    projHtml = `<div class="section-title">Project Overview</div><div class="dash-cards">`;
+    for (let p of S.projects) {
+      let pRecs = allTasks.filter(t=>t.rec.projectId===p.id);
+      let pComp = pRecs.filter(t=>isCompletedStatus(t.status||''));
+      let pOver = pRecs.filter(t=>t.tag==='overdue');
+      projHtml += `<div class="proj-card" style="border-left-color:${p.color}" onclick="U.proj='${p.id}';U.tab='dashboard';render()">
+        <h3>${esc(p.name)}</h3>
+        <div class="proj-stats">
+          <span>Tasks <b>${pRecs.length}</b></span>
+          <span>Done <b style="color:var(--suc)">${pComp.length}</b></span>
+          <span>Overdue <b style="color:var(--dan)">${pOver.length}</b></span>
+          <span>Owners <b>${p.personIds?.length||0}</b></span>
+        </div>
+      </div>`;
+    }
+    projHtml += `</div>`;
+  }
+
+  let boardHtml = `<div class="section-title">Board Stats</div><div class="dash-cards">`;
+  for (let b of boards) {
+    let recs = filterRecords(b.id, U.proj);
+    let sf = getStatusField(b);
+    let dist = {};
+    if (sf) for (let r of recs) { let s=r[sf.id]||'No Status'; dist[s]=(dist[s]||0)+1; }
+    let distHtml = Object.entries(dist).map(([k,v])=>{
+      let opt=sf?.options.find(o=>o.value===k);let color=opt?opt.color:'#94a3b8';
+      return `<span class="badge" style="background:${color}20;color:${color}">${esc(k)} ${v}</span>`;
+    }).join(' ');
+    boardHtml += `<div class="dcard"><div class="dcard-label">${b.icon} ${esc(b.name)}</div><div class="dcard-val">${recs.length}</div><div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${distHtml||'<span style="color:var(--mut);font-size:12px">No data</span>'}</div></div>`;
+  }
+  boardHtml += `</div>`;
+
+  let personHtml = `<div class="section-title">Workload by Owner <button class="btn btn-sec btn-sm" onclick="U.view='person';U.tab='person';render()" style="margin-left:8px">Switch to Person View</button></div><div class="dash-cards">`;
+  let persons = U.proj==='all'?S.persons:getProjectPersons(U.proj);
+  for (let p of persons) {
+    let pTasks = allTasks.filter(t=>{let pf=getPersonField(t.board);return pf&&t.rec[pf.id]===p.id});
+    let pComp = pTasks.filter(t=>isCompletedStatus(t.status||''));
+    personHtml += `<div class="dcard"><div class="dcard-label"><span class="color-dot" style="background:${p.color};display:inline-block;vertical-align:middle;margin-right:4px;width:10px;height:10px;border-radius:50%"></span>${esc(p.name)}</div><div class="dcard-val">${pTasks.length}</div><div class="dcard-sub">Completed ${pComp.length}</div></div>`;
+  }
+  personHtml += `</div>`;
+
+  return todayHtml + cards + projHtml + boardHtml + personHtml;
+}
+
+function isCompletedStatus(s){
+  s = (s||'').toLowerCase();
+  return s.includes('completed')||s.includes('stored')||s.includes('listed')||s.includes('signed')||s.includes('delivered');
+}
+
+// ===== BOARD TABLE =====
+function renderBoardTable(b) {
+  let recs = filterRecords(b.id, U.proj);
+  let search = U.search[b.id]||'';
+  let filterStatus = U.filter[b.id+'_'+(getStatusField(b)?.id||'')]||'';
+  let sortKey = U.sort[b.id]; // {field, dir}
+
+  // Filter
+  if (filterStatus) recs = recs.filter(r=>{let sf=getStatusField(b);return sf&&r[sf.id]===filterStatus});
+  if (search) {
+    let s = search.toLowerCase();
+    recs = recs.filter(r=>b.fields.some(f=>String(r[f.id]||'').toLowerCase().includes(s)));
+  }
+  // Sort
+  if (sortKey) {
+    recs = [...recs].sort((a,b2)=>{
+      let av=a[sortKey.field]||'',bv=b2[sortKey.field]||'';
+      if(typeof av==='number')return sortKey.dir==='asc'?av-bv:bv-av;
+      return sortKey.dir==='asc'?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
+    });
+  }
+
+  let sf = getStatusField(b);
+  let statusFilterHtml = sf ? `<select onchange="U.filter['${b.id}_${sf.id}']=this.value;render()"><option value="">All Status</option>${sf.options.map(o=>`<option value="${esc(o.value)}" ${filterStatus===o.value?'selected':''}>${esc(o.value)}</option>`).join('')}</select>` : '';
+
+  let persons = getProjectPersons(U.proj);
+  let personField = getPersonField(b);
+
+  // Build header with editable support (admin only)
+  let thead = `<tr><th style="width:28px"></th>`;
+  for (let f of b.fields) {
+    let sortDir = sortKey&&sortKey.field===f.id ? sortKey.dir : '';
+    let sortInd = sortDir ? (sortDir === 'asc' ? '▲' : '▼') : '⇅';
+    let sortClass = sortDir ? 'active' : '';
+    let isSorted = sortKey && sortKey.field === f.id;
+    let editHint = U.isAdmin ? '<span class="th-edit-hint">✏️</span>' : '';
+    // Click header text → edit (admin only); click sort arrow → toggle sort
+    let textClick = U.isAdmin ? `onclick="editHeader('${b.id}','${f.id}',this)"` : '';
+    let theadCell = `<th class="${U.isAdmin ? 'th-editable' : ''}">
+      <span class="th-text" ${textClick}>${esc(f.name)}${editHint}</span>
+      <span class="th-sort ${sortClass}" onclick="toggleSort('${b.id}','${f.id}')" title="Sort">${sortInd}</span>
+    </th>`;
+    thead += theadCell;
+  }
+  thead += `<th class="td-action"></th></tr>`;
+
+  let tbody = '';
+  if (recs.length===0) {
+    tbody = `<tr class="empty-row"><td colspan="${b.fields.length+2}">No data. ${U.isAdmin ? 'Click + Add to create new records.' : ''}</td></tr>`;
+  } else {
+    for (let r of recs) {
+      tbody += `<tr data-rid="${r.id}"><td style="text-align:center;color:var(--mut);font-size:11px">${getProject(r.projectId)?getProject(r.projectId).name.charAt(0):'?'}</td>`;
+      for (let f of b.fields) {
+        let val = r[f.id]??'';
+        let cellHtml = '';
+        if (f.type==='select') {
+          let opt = f.options.find(o=>o.value===val);
+          cellHtml = opt?`<span class="badge" style="background:${opt.color}20;color:${opt.color}">${esc(opt.value)}</span>`:esc(val);
+        } else if (f.type==='person') {
+          let pp = getPerson(val);
+          cellHtml = pp?`<span class="badge" style="background:${pp.color}20;color:${pp.color}">${esc(pp.name)}</span>`:'';
+        } else if (f.type==='number' && f.isProgress) {
+          let pct = Math.min(100,Math.max(0,val||0));
+          let color = pct>=80?'var(--suc)':pct>=40?'var(--war)':'var(--dan)';
+          cellHtml = `<div style="display:flex;align-items:center;gap:6px"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div><span style="font-size:11px">${pct}%</span></div>`;
+        } else {
+          cellHtml = esc(val);
+        }
+        let editableClass = U.isAdmin ? 'td-edit' : '';
+        tbody += `<td class="${editableClass}" data-bid="${b.id}" data-rid="${r.id}" data-fid="${f.id}">${cellHtml}</td>`;
+      }
+      let delBtn = U.isAdmin ? `<td class="td-action"><span class="del-btn" onclick="delRecord('${b.id}','${r.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span></td>` : `<td class="td-action"></td>`;
+      tbody += `${delBtn}</tr>`;
+    }
+  }
+
+  let addBtn = U.isAdmin ? `<button class="btn btn-sm" onclick="showAddRecord('${b.id}')">+ Add</button>` : '';
+  let exportBtn = `<button class="btn btn-sec btn-sm" onclick="exportCSV('${b.id}')">Export CSV</button>`;
+
+  return `<div class="tbl-wrap">
+    <div class="tbl-bar">
+      <input type="text" placeholder="Search..." value="${esc(search)}" oninput="U.search['${b.id}']=this.value;debounceRender()">
+      ${statusFilterHtml}
+      <span class="row-count">${recs.length} ${recs.length===1?'record':'records'}</span>
+      <span class="row-count" style="margin-left:8px">${exportBtn}${addBtn}</span>
+    </div>
+    <div class="tbl-scroll"><table><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>
+  </div>`;
+}
+
+let debounceRender = debounce(()=>render(),300);
+
+function toggleSort(bid,fid){
+  if(!U.sort[bid])U.sort[bid]={field:fid,dir:'asc'};
+  else if(U.sort[bid].field===fid)U.sort[bid].dir=U.sort[bid].dir==='asc'?'desc':'asc';
+  else U.sort[bid]={field:fid,dir:'asc'};
+  render();
+}
+
+// ===== EDIT HEADER (admin only) =====
+function editHeader(bid,fid,thEl){
+  if(!U.isAdmin)return;
+  let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);
+  if(!f)return;
+  let textSpan=thEl.querySelector('.th-text');
+  let original=f.name;
+  let inp=document.createElement('input');
+  inp.type='text';
+  inp.className='th-edit-input';
+  inp.value=original;
+  textSpan.innerHTML='';
+  textSpan.appendChild(inp);
+  inp.focus();inp.select();
+  let done=()=>{
+    let v=inp.value.trim();
+    if(v&&v!==original){
+      f.name=v;
+      save();
+    }
+    render();
+  };
+  let cancel=()=>render();
+  inp.onblur=done;
+  inp.onkeydown=(e)=>{
+    if(e.key==='Enter'){e.preventDefault();inp.blur()}
+    if(e.key==='Escape'){inp.onblur=null;inp.remove();cancel()}
+    e.stopPropagation();
+  };
+  inp.onclick=(e)=>e.stopPropagation();
+}
+
+// ===== INLINE EDIT =====
+document.addEventListener('click',(e)=>{
+  if(!U.isAdmin)return; // View mode: no editing
+  let cell=e.target.closest('.td-edit');
+  if(!cell||cell.querySelector('.cell-edit'))return;
+  let bid=cell.dataset.bid,rid=cell.dataset.rid,fid=cell.dataset.fid;
+  let b=getBoard(bid),f=b.fields.find(x=>x.id===fid),r=getBoardRecords(bid).find(x=>x.id===rid);
+  if(!f||!r)return;
+  let val=r[fid]??'';
+
+  if(f.type==='select'){
+    let opts=f.options.map(o=>`<option value="${esc(o.value)}" ${o.value===val?'selected':''}>${esc(o.value)}</option>`).join('');
+    cell.innerHTML=`<select class="cell-edit" autofocus><option value="">--</option>${opts}</select>`;
+    let sel=cell.querySelector('select');
+    sel.focus();
+    let done=()=>{r[fid]=sel.value;save();render();};
+    sel.onchange=done;sel.onblur=done;
+  } else if(f.type==='person'){
+    let persons=getProjectPersons(r.projectId);
+    let opts=persons.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${esc(p.name)}</option>`).join('');
+    cell.innerHTML=`<select class="cell-edit" autofocus><option value="">--</option>${opts}</select>`;
+    let sel=cell.querySelector('select');
+    sel.focus();
+    let done=()=>{r[fid]=sel.value;save();render();};
+    sel.onchange=done;sel.onblur=done;
+  } else if(f.type==='textarea'){
+    cell.innerHTML=`<textarea class="cell-edit" autofocus rows="2">${esc(val)}</textarea>`;
+    let inp=cell.querySelector('textarea');
+    inp.focus();
+    let done=()=>{r[fid]=inp.value;save();render();};
+    inp.onblur=done;
+    inp.onkeydown=(ev)=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();inp.blur()}if(ev.key==='Escape')render()};
+  } else {
+    let tp=f.type==='number'?'number':f.type==='date'?'date':'text';
+    cell.innerHTML=`<input type="${tp}" class="cell-edit" value="${esc(val)}" autofocus>`;
+    let inp=cell.querySelector('input');
+    inp.focus();inp.select();
+    let done=()=>{let v=inp.value;if(f.type==='number')v=v?Number(v):'';r[fid]=v;save();render();};
+    inp.onblur=done;
+    inp.onkeydown=(ev)=>{if(ev.key==='Enter')inp.blur();if(ev.key==='Escape')render()};
+  }
+});
+
+// ===== ADD RECORD =====
+function showAddRecord(bid){
+  if(!U.isAdmin)return;
+  let b=getBoard(bid);
+  let persons=getProjectPersons(U.proj);
+  let fieldsHtml=b.fields.map(f=>{
+    if(f.type==='select')return `<div class="form-row"><label>${esc(f.name)}${f.required?' *':''}</label><select id="nf_${f.id}"><option value="">--</option>${f.options.map(o=>`<option value="${esc(o.value)}">${esc(o.value)}</option>`).join('')}</select></div>`;
+    if(f.type==='person')return `<div class="form-row"><label>${esc(f.name)}${f.required?' *':''}</label><select id="nf_${f.id}"><option value="">--</option>${persons.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`;
+    let tp=f.type==='number'?'number':f.type==='date'?'date':'text';
+    return `<div class="form-row"><label>${esc(f.name)}${f.required?' *':''}</label><input type="${tp}" id="nf_${f.id}"></div>`;
+  }).join('');
+
+  let projOpts = U.proj==='all'
+    ? `<div class="form-row"><label>Project *</label><select id="nf_project"><option value="">--</option>${S.projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`
+    : `<input type="hidden" id="nf_project" value="${U.proj}">`;
+
+  showModal(`<div class="modal-hd">Add Record · ${b.icon} ${esc(b.name)}<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">${projOpts}${fieldsHtml}</div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doAddRecord('${bid}')">Add</button></div>`);
+}
+
+function doAddRecord(bid){
+  let b=getBoard(bid);
+  let pid=document.getElementById('nf_project').value;
+  if(!pid){showToast('Please select a project');return}
+  let rec={id:uid(),projectId:pid};
+  for(let f of b.fields){
+    let el=document.getElementById('nf_'+f.id);
+    let v=el?el.value:'';
+    if(f.required&&!v){showToast(f.name+' is required');el?.focus();return}
+    if(f.type==='number'&&v)v=Number(v);
+    rec[f.id]=v;
+  }
+  if(!S.records[bid])S.records[bid]=[];
+  S.records[bid].push(rec);
+  save();
+  hideModal();
+  render();
+  showToast('Record added');
+}
+
+function delRecord(bid,rid){
+  if(!U.isAdmin)return;
+  showConfirm('Delete this record?',()=>{
+    S.records[bid]=getBoardRecords(bid).filter(r=>r.id!==rid);
+    save();render();showToast('Deleted');
+  });
+}
+
+// ===== PERSON VIEW =====
+function renderPersonView(){
+  if(!U.person){
+    return `<div style="text-align:center;padding:60px 20px;color:var(--mut)">
+      <p style="font-size:16px;margin-bottom:8px">Please select a person to view cross-project progress</p>
+      <p style="font-size:13px">Choose an owner from the dropdown at the top</p>
+    </div>`;
+  }
+  let person=getPerson(U.person);
+  if(!person)return'<p>Person not found</p>';
+
+  // Gather all records for this person
+  let allItems=[];
+  for(let b of S.boards){
+    let pf=getPersonField(b);
+    if(!pf)continue;
+    let recs=getBoardRecords(b.id).filter(r=>r[pf.id]===U.person);
+    for(let r of recs){
+      let sf=getStatusField(b),plf=getProgressField(b);
+      allItems.push({
+        board:b,rec:r,
+        status:sf?r[sf.id]:'',
+        progress:plf?r[plf.id]:null,
+        name:r[b.fields[0].id]||'(Untitled)',
+        project:getProject(r.projectId)
+      });
+    }
+  }
+  let total=allItems.length;
+  let done=allItems.filter(t=>isCompletedStatus(t.status||''));
+  let prog=allItems.filter(t=>(t.status||'').toLowerCase().includes('progress'));
+  let over=allItems.filter(t=>{let dl=t.board.fields.find(f=>f.name.toLowerCase().includes('due')||f.name.toLowerCase().includes('eta'));return dl&&t.rec[dl.id]&&!isCompletedStatus(t.status)&&daysUntil(t.rec[dl.id])<0});
+  let rate=total?Math.round(done.length/total*100):0;
+
+  // Progress ring
+  let r=40,circ=2*Math.PI*r,offset=circ*(1-rate/100);
+  let ringHtml=`<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="8"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${person.color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .5s"/><text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="20" font-weight="700" fill="${person.color}">${rate}%</text></svg>`;
+
+  // Group by project
+  let groups={};
+  for(let t of allItems){
+    let pid=t.rec.projectId||'none';
+    if(!groups[pid])groups[pid]={project:t.project||{name:'Unassigned',color:'#94a3b8'},items:[]};
+    groups[pid].items.push(t);
+  }
+  let groupsHtml='';
+  for(let [pid,g] of Object.entries(groups)){
+    let subGroups={};
+    for(let t of g.items){
+      if(!subGroups[t.board.id])subGroups[t.board.id]={board:t.board,items:[]};
+      subGroups[t.board.id].items.push(t);
+    }
+    let itemsHtml='';
+    for(let sg of Object.values(subGroups)){
+      for(let t of sg.items){
+        let sf=getStatusField(t.board);
+        let stBadge='';
+        if(sf){let opt=sf.options.find(o=>o.value===t.status);stBadge=opt?`<span class="badge" style="background:${opt.color}20;color:${opt.color}">${esc(opt.value)}</span>`:''}
+        let progHtml='';
+        if(t.progress!=null){let pct=Math.min(100,t.progress);let color=pct>=80?'var(--suc)':pct>=40?'var(--war)':'var(--dan)';progHtml=`<div class="prog-bar" style="width:50px"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div><span style="font-size:11px">${pct}%</span>`}
+        itemsHtml+=`<div class="pv-item">
+          <span class="pv-item-name">${esc(t.name)}</span>
+          ${progHtml?`<div style="display:flex;align-items:center;gap:4px">${progHtml}</div>`:''}
+          ${stBadge}
+        </div>`;
+      }
+    }
+    groupsHtml+=`<div class="pv-group">
+      <div class="pv-group-hd"><span class="color-dot" style="background:${g.project.color}"></span>${esc(g.project.name)} <span style="font-size:12px;color:var(--mut);font-weight:400">${g.items.length} items</span></div>
+      ${itemsHtml||'<div style="padding:12px;color:var(--mut);font-size:13px">No tasks</div>'}
+    </div>`;
+  }
+
+  return `<div class="pv-summary">
+    <div class="pv-card"><div class="pv-ring">${ringHtml}</div><div style="font-weight:700;font-size:15px">${esc(person.name)}</div></div>
+    <div class="pv-card"><div class="pv-val">${total}</div><div class="pv-label">Total Tasks</div></div>
+    <div class="pv-card"><div class="pv-val" style="color:var(--suc)">${done.length}</div><div class="pv-label">Completed</div></div>
+    <div class="pv-card"><div class="pv-val" style="color:var(--inf)">${prog.length}</div><div class="pv-label">In Progress</div></div>
+    <div class="pv-card"><div class="pv-val" style="color:var(--dan)">${over.length}</div><div class="pv-label">Overdue</div></div>
+  </div>
+  ${groupsHtml||'<div style="text-align:center;padding:40px;color:var(--mut)">No tasks for this person</div>'}`;
+}
+
+// ===== FLOWCHART =====
+function renderFlowchart(){
+  if(U.proj==='all')return '<div class="fc-empty"><p style="font-size:16px;margin-bottom:8px">Please select a project first</p><p style="font-size:13px">Choose a project from the dropdown at the top to view/edit flowcharts</p></div>';
+  let charts=S.flowcharts.filter(fc=>fc.projectId===U.proj);
+  let chart=U.fcChart?S.flowcharts.find(fc=>fc.id===U.fcChart):charts[0];
+  if(!chart&&charts.length>0){chart=charts[0];U.fcChart=chart.id}
+  if(!chart)U.fcChart=null;
+
+  let chartOpts=charts.map(fc=>`<option value="${fc.id}" ${U.fcChart===fc.id?'selected':''}>${esc(fc.name)}</option>`).join('');
+  let barHtml=`<div class="fc-bar">
+    <select onchange="U.fcChart=this.value;U.fcSelected=null;render();setupFcEvents()">${chartOpts||'<option>No flowcharts</option>'}</select>
+    ${U.isAdmin?`<button class="btn btn-sm" onclick="createFlowchart()">+ New Chart</button>`:''}
+    ${chart&&U.isAdmin?`<button class="btn btn-sec btn-sm" onclick="renameFlowchart('${chart.id}')">Rename</button><button class="btn btn-dan btn-sm" onclick="deleteFlowchart('${chart.id}')">Delete</button>`:''}
+    <div class="fc-tools">
+      ${chart&&U.isAdmin?`
+      <button class="fc-tool" onclick="addFcNode('start')">+ Start</button>
+      <button class="fc-tool" onclick="addFcNode('process')">+ Process</button>
+      <button class="fc-tool" onclick="addFcNode('decision')">+ Decision</button>
+      <button class="fc-tool" onclick="addFcNode('end')">+ End</button>
+      <button class="fc-tool ${U.fcConnect?'active':''}" onclick="U.fcConnect=!U.fcConnect;U.fcConnectFrom=null;render();setupFcEvents()">${U.fcConnect?'Cancel':'Connect'}</button>
+      <button class="fc-tool" onclick="deleteFcItem()">Delete</button>
+      `:''}
+    </div>
+  </div>`;
+
+  if(!chart){
+    return `<div class="fc-wrap">${barHtml}<div class="fc-empty"><p style="font-size:16px;margin-bottom:8px">No flowcharts for this project</p><p style="font-size:13px;margin-bottom:16px">${U.isAdmin?'Click "+ New Chart" to create one':'Admin must create the first chart'}</p></div></div>`;
+  }
+
+  let svgContent=renderFcSVG(chart);
+  return `<div class="fc-wrap">${barHtml}<div class="fc-canvas" id="fcCanvas"><svg id="fcSvg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMin meet">
+    <defs><marker id="fcArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#94a3b8"/></marker></defs>
+    ${svgContent}
+  </svg></div></div>`;
+}
+
+function renderFcSVG(chart){
+  let edgesHtml='';
+  for(let e of chart.edges){
+    let from=chart.nodes.find(n=>n.id===e.from),to=chart.nodes.find(n=>n.id===e.to);
+    if(!from||!to)continue;
+    let x1=from.x+from.w,y1=from.y+from.h/2,x2=to.x,y2=to.y+to.h/2;
+    let midX=(x1+x2)/2;
+    let sel=U.fcSelected===e.id;
+    edgesHtml+=`<path class="fc-edge" data-id="${e.id}" d="M ${x1} ${y1} C ${midX} ${y1},${midX} ${y2},${x2} ${y2}" fill="none" stroke="${sel?'#4f46e5':'#94a3b8'}" stroke-width="${sel?3:2}" marker-end="url(#fcArrow)"/>`;
+  }
+  let nodesHtml='';
+  for(let n of chart.nodes){
+    let t=FC_TYPES[n.type]||FC_TYPES.process;
+    let sel=U.fcSelected===n.id;
+    let sw=sel?3:2;
+    let conn=U.fcConnect&&U.fcConnectFrom===n.id;
+    let shape='';
+    if(n.type==='decision'){
+      let cx=n.x+n.w/2,cy=n.y+n.h/2;
+      shape=`<polygon points="${cx},${n.y} ${n.x+n.w},${cy} ${cx},${n.y+n.h} ${n.x},${cy}" fill="${t.fill}" stroke="${conn?'#4f46e5':t.stroke}" stroke-width="${conn?4:sw}"/>`;
+    } else {
+      shape=`<rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="${t.rx}" fill="${t.fill}" stroke="${conn?'#4f46e5':t.stroke}" stroke-width="${conn?4:sw}"/>`;
+    }
+    let textY=n.type==='decision'?n.y+n.h/2:n.y+n.h/2;
+    nodesHtml+=`<g class="fc-node" data-id="${n.id}">${shape}<text x="${n.x+n.w/2}" y="${textY}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#1e293b" pointer-events="none">${esc(n.text||'')}</text></g>`;
+  }
+  return edgesHtml+nodesHtml;
+}
+
+function setupFcEvents(){
+  let svg=document.getElementById('fcSvg');
+  if(!svg)return;
+  let drag=null;
+  let chart=S.flowcharts.find(fc=>fc.id===U.fcChart);
+  if(!chart)return;
+
+  svg.onmousedown=fcMouseDown;
+  svg.ondblclick=fcDblClick;
+
+  function fcMouseDown(e){
+    let nodeEl=e.target.closest('.fc-node');
+    let edgeEl=e.target.closest('.fc-edge');
+    if(nodeEl){
+      let nid=nodeEl.dataset.id;
+      let node=chart.nodes.find(n=>n.id===nid);
+      if(U.fcConnect){
+        if(!U.fcConnectFrom){U.fcConnectFrom=nid;render();setupFcEvents()}
+        else if(U.fcConnectFrom!==nid){
+          // Create edge
+          if(!chart.edges.some(ed=>ed.from===U.fcConnectFrom&&ed.to===nid)){
+            chart.edges.push({id:uid(),from:U.fcConnectFrom,to:nid});
+            save();
+          }
+          U.fcConnectFrom=null;U.fcConnect=false;
+          render();setupFcEvents();
+        }
+        return;
+      }
+      U.fcSelected=nid;
+      let pt=getSVGPt(svg,e);
+      drag={node,ox:pt.x-node.x,oy:pt.y-node.y};
+      render();setupFcEvents();
+      e.preventDefault();
+    } else if(edgeEl){
+      U.fcSelected=edgeEl.dataset.id;
+      render();setupFcEvents();
+    } else {
+      U.fcSelected=null;
+      render();setupFcEvents();
+    }
+  }
+  document.onmousemove=(e)=>{
+    if(!drag)return;
+    let pt=getSVGPt(svg,e);
+    drag.node.x=Math.max(0,Math.round(pt.x-drag.ox));
+    drag.node.y=Math.max(0,Math.round(pt.y-drag.oy));
+    // Direct DOM update for smoothness
+    let nodeEl=svg.querySelector(`.fc-node[data-id="${drag.node.id}"]`);
+    if(nodeEl){
+      let n=drag.node,t=FC_TYPES[n.type];
+      if(n.type==='decision'){
+        let cx=n.x+n.w/2,cy=n.y+n.h/2;
+        nodeEl.querySelector('polygon').setAttribute('points',`${cx},${n.y} ${n.x+n.w},${cy} ${cx},${n.y+n.h} ${n.x},${cy}`);
+      } else {
+        let r=nodeEl.querySelector('rect');r.setAttribute('x',n.x);r.setAttribute('y',n.y);
+      }
+      let txt=nodeEl.querySelector('text');txt.setAttribute('x',n.x+n.w/2);txt.setAttribute('y',n.y+n.h/2);
+    }
+    // Update connected edges
+    for(let e2 of chart.edges){
+      if(e2.from===drag.node.id||e2.to===drag.node.id){
+        let from=chart.nodes.find(n=>n.id===e2.from),to=chart.nodes.find(n=>n.id===e2.to);
+        let edgeEl2=svg.querySelector(`.fc-edge[data-id="${e2.id}"]`);
+        if(edgeEl2&&from&&to){
+          let x1=from.x+from.w,y1=from.y+from.h/2,x2=to.x,y2=to.y+to.h/2,midX=(x1+x2)/2;
+          edgeEl2.setAttribute('d',`M ${x1} ${y1} C ${midX} ${y1},${midX} ${y2},${x2} ${y2}`);
+        }
+      }
+    }
+  };
+  document.onmouseup=()=>{if(drag){drag=null;save();render();setupFcEvents()}};
+
+  function fcDblClick(e){
+    let nodeEl=e.target.closest('.fc-node');
+    if(!nodeEl)return;
+    let nid=nodeEl.dataset.id;
+    let node=chart.nodes.find(n=>n.id===nid);
+    if(!node)return;
+    // Show edit input
+    let canvas=document.getElementById('fcCanvas');
+    let rect=svg.getBoundingClientRect();
+    let scale=rect.width/1000;
+    let inp=document.createElement('input');
+    inp.className='fc-edit-input';
+    inp.value=node.text||'';
+    let cx=(node.x+node.w/2)*scale+rect.left-canvas.getBoundingClientRect().left;
+    let cy=(node.y+node.h/2)*(rect.height/500)+rect.top-canvas.getBoundingClientRect().top;
+    inp.style.left=cx+'px';inp.style.top=cy+'px';inp.style.minWidth='80px';
+    canvas.appendChild(inp);
+    inp.focus();inp.select();
+    let done=()=>{node.text=inp.value;save();inp.remove();render();setupFcEvents()};
+    inp.onblur=done;
+    inp.onkeydown=(ev)=>{if(ev.key==='Enter')inp.blur();if(ev.key==='Escape'){inp.remove();render();setupFcEvents()}};
+  }
+}
+
+function getSVGPt(svg,e){
+  let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function addFcNode(type){
+  if(!U.isAdmin)return;
+  let chart=S.flowcharts.find(fc=>fc.id===U.fcChart);
+  if(!chart)return;
+  let w=type==='decision'?120:120,h=type==='decision'?80:50;
+  chart.nodes.push({id:uid(),x:200+Math.random()*200,y:150+Math.random()*150,w,h,text:FC_TYPES[type].label,type});
+  save();render();setupFcEvents();
+}
+
+function deleteFcItem(){
+  if(!U.isAdmin)return;
+  let chart=S.flowcharts.find(fc=>fc.id===U.fcChart);
+  if(!chart||!U.fcSelected)return;
+  // Check if it's a node or edge
+  let isNode=chart.nodes.some(n=>n.id===U.fcSelected);
+  if(isNode){
+    chart.nodes=chart.nodes.filter(n=>n.id!==U.fcSelected);
+    chart.edges=chart.edges.filter(e=>e.from!==U.fcSelected&&e.to!==U.fcSelected);
+  } else {
+    chart.edges=chart.edges.filter(e=>e.id!==U.fcSelected);
+  }
+  U.fcSelected=null;
+  save();render();setupFcEvents();
+}
+
+function createFlowchart(){
+  if(!U.isAdmin)return;
+  showModal(`<div class="modal-hd">New Flowchart<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd"><div class="form-row"><label>Flowchart Name</label><input type="text" id="fcName" placeholder="e.g. Main Process" autofocus></div></div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doCreateFc()">Create</button></div>`);
+  setTimeout(()=>{let el=document.getElementById('fcName');if(el)el.onkeydown=e=>{if(e.key==='Enter')doCreateFc()}},50);
+}
+function doCreateFc(){
+  let name=document.getElementById('fcName').value.trim();
+  if(!name){showToast('Please enter a name');return}
+  let fc={id:uid(),projectId:U.proj,name,nodes:[],edges:[]};
+  S.flowcharts.push(fc);
+  U.fcChart=fc.id;
+  save();hideModal();render();setupFcEvents();
+}
+function renameFlowchart(id){
+  let fc=S.flowcharts.find(f=>f.id===id);
+  showModal(`<div class="modal-hd">Rename Flowchart<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd"><div class="form-row"><label>Name</label><input type="text" id="fcName2" value="${esc(fc.name)}"></div></div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doRenameFc('${id}')">Save</button></div>`);
+}
+function doRenameFc(id){let fc=S.flowcharts.find(f=>f.id===id);fc.name=document.getElementById('fcName2').value.trim()||fc.name;save();hideModal();render();setupFcEvents()}
+function deleteFlowchart(id){
+  showConfirm('Delete this flowchart?',()=>{S.flowcharts=S.flowcharts.filter(f=>f.id!==id);U.fcChart=null;save();render();setupFcEvents();showToast('Deleted')});
+}
+
+// ===== MANAGEMENT =====
+function renderManagement(){
+  let subTab=U.mgmtTab||'projects';
+  let tabs=`<div class="mgmt-tabs">
+    <div class="mgmt-tab ${subTab==='projects'?'active':''}" onclick="U.mgmtTab='projects';render()">Projects</div>
+    <div class="mgmt-tab ${subTab==='persons'?'active':''}" onclick="U.mgmtTab='persons';render()">Persons</div>
+    <div class="mgmt-tab ${subTab==='boards'?'active':''}" onclick="U.mgmtTab='boards';render()">Boards</div>
+    <div class="mgmt-tab ${subTab==='data'?'active':''}" onclick="U.mgmtTab='data';render()">Data</div>
+  </div>`;
+  let body='';
+  if(subTab==='projects')body=renderMgmtProjects();
+  else if(subTab==='persons')body=renderMgmtPersons();
+  else if(subTab==='boards')body=renderMgmtBoards();
+  else body=renderMgmtData();
+  return tabs+body;
+}
+
+function renderMgmtProjects(){
+  let list='';
+  for(let p of S.projects){
+    let pBoards=getVisibleBoards(p.id);
+    let boardToggles=S.boards.map(b=>{
+      let checked=p.boardIds?p.boardIds.includes(b.id):true;
+      return `<label class="checkbox-row" style="min-width:120px"><input type="checkbox" ${checked?'checked':''} onchange="toggleProjectBoard('${p.id}','${b.id}',this.checked)"> ${b.icon} ${esc(b.name)}</label>`;
+    }).join('');
+    let personToggles=S.persons.map(ps=>{
+      let checked=p.personIds?p.personIds.includes(ps.id):false;
+      return `<label class="checkbox-row" style="min-width:80px"><input type="checkbox" ${checked?'checked':''} onchange="toggleProjectPerson('${p.id}','${ps.id}',this.checked)"> <span class="color-dot" style="background:${ps.color};width:10px;height:10px;border-radius:50%;display:inline-block"></span> ${esc(ps.name)}</label>`;
+    }).join('');
+    list+=`<div class="mgmt-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <span class="color-dot" style="background:${p.color}"></span>
+        <span class="mgmt-item-name">${esc(p.name)}</span>
+        <span class="mgmt-item-meta">${pBoards.length} boards · ${p.personIds?.length||0} owners</span>
+        <button class="btn btn-sec btn-sm" onclick="editProject('${p.id}')">Edit</button>
+        <button class="btn btn-dan btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:26px"><span style="font-size:12px;color:var(--mut);width:80px">Boards:</span>${boardToggles}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:26px"><span style="font-size:12px;color:var(--mut);width:80px">Owners:</span>${personToggles}</div>
+    </div>`;
+  }
+  return `<div class="mgmt-section">
+    <div class="section-title">Projects <button class="btn btn-sm st-action" onclick="addProject()">+ New Project</button></div>
+    <div class="mgmt-list">${list}</div>
+  </div>`;
+}
+
+function addProject(){
+  let colorOpts=COLORS.map(c=>`<span class="${c==='#4f46e5'?'sel':''}" style="background:${c}" onclick="this.parentElement.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));this.classList.add('sel');document.getElementById('projColor').value=this.style.background"></span>`).join('');
+  showModal(`<div class="modal-hd">New Project<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <div class="form-row"><label>Project Name</label><input type="text" id="projName" autofocus></div>
+      <div class="form-row"><label>Color</label><input type="hidden" id="projColor" value="#4f46e5"><div class="color-pick">${colorOpts}</div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doAddProject()">Add</button></div>`);
+  setTimeout(()=>{let el=document.getElementById('projName');if(el)el.onkeydown=e=>{if(e.key==='Enter')doAddProject()}},50);
+}
+function doAddProject(){
+  let name=document.getElementById('projName').value.trim();
+  if(!name){showToast('Please enter a project name');return}
+  let color=document.getElementById('projColor').value;
+  S.projects.push({id:uid(),name,color,personIds:[],boardIds:S.boards.map(b=>b.id)});
+  save();hideModal();render();showToast('Project added');
+}
+function editProject(id){
+  let p=getProject(id);
+  let colorOpts=COLORS.map(c=>`<span class="${c===p.color?'sel':''}" style="background:${c}" onclick="this.parentElement.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));this.classList.add('sel');document.getElementById('projColor2').value=this.style.background"></span>`).join('');
+  showModal(`<div class="modal-hd">Edit Project<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <div class="form-row"><label>Project Name</label><input type="text" id="projName2" value="${esc(p.name)}"></div>
+      <div class="form-row"><label>Color</label><input type="hidden" id="projColor2" value="${p.color}"><div class="color-pick">${colorOpts}</div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doEditProject('${id}')">Save</button></div>`);
+}
+function doEditProject(id){let p=getProject(id);p.name=document.getElementById('projName2').value.trim()||p.name;p.color=document.getElementById('projColor2').value;save();hideModal();render();showToast('Saved')}
+function deleteProject(id){
+  showConfirm('Delete this project? All related data will be deleted.',()=>{
+    S.projects=S.projects.filter(p=>p.id!==id);
+    for(let bid in S.records)S.records[bid]=S.records[bid].filter(r=>r.projectId!==id);
+    S.flowcharts=S.flowcharts.filter(f=>f.projectId!==id);
+    if(U.proj===id){U.proj='all';U.tab='dashboard'}
+    save();render();showToast('Project deleted');
+  });
+}
+function toggleProjectBoard(pid,bid,checked){
+  let p=getProject(pid);
+  if(!p.boardIds)p.boardIds=S.boards.map(b=>b.id);
+  if(checked&&!p.boardIds.includes(bid))p.boardIds.push(bid);
+  if(!checked)p.boardIds=p.boardIds.filter(x=>x!==bid);
+  save();
+}
+function toggleProjectPerson(pid,psid,checked){
+  let p=getProject(pid);
+  if(!p.personIds)p.personIds=[];
+  if(checked&&!p.personIds.includes(psid))p.personIds.push(psid);
+  if(!checked)p.personIds=p.personIds.filter(x=>x!==psid);
+  save();
+}
+
+function renderMgmtPersons(){
+  let list='';
+  for(let p of S.persons){
+    let projCount=S.projects.filter(pr=>pr.personIds?.includes(p.id)).length;
+    let taskCount=0;
+    for(let b of S.boards){let pf=getPersonField(b);if(pf)taskCount+=getBoardRecords(b.id).filter(r=>r[pf.id]===p.id).length}
+    let projToggles='';
+    if(S.projects.length>0){
+      projToggles=S.projects.map(pr=>{
+        let checked=pr.personIds?pr.personIds.includes(p.id):false;
+        return `<label class="checkbox-row" style="min-width:120px"><input type="checkbox" ${checked?'checked':''} onchange="togglePersonProject('${p.id}','${pr.id}',this.checked)"> <span class="color-dot" style="background:${pr.color};width:10px;height:10px;border-radius:50%;display:inline-block"></span> ${esc(pr.name)}</label>`;
+      }).join('');
+    }else{
+      projToggles='<span style="font-size:12px;color:var(--mut)">No projects yet. Add one in "Projects" first.</span>';
+    }
+    list+=`<div class="mgmt-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <span class="color-dot" style="background:${p.color}"></span>
+        <span class="mgmt-item-name">${esc(p.name)}</span>
+        <span class="mgmt-item-meta">${projCount} projects · ${taskCount} tasks</span>
+        <button class="btn btn-sec btn-sm" onclick="editPerson('${p.id}')">Edit</button>
+        <button class="btn btn-dan btn-sm" onclick="deletePerson('${p.id}')">Delete</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:26px"><span style="font-size:12px;color:var(--mut);width:80px">Projects:</span>${projToggles}</div>
+    </div>`;
+  }
+  return `<div class="mgmt-section">
+    <div class="section-title">Persons <button class="btn btn-sm st-action" onclick="addPerson()">+ New Person</button></div>
+    <div class="mgmt-list">${list}</div>
+  </div>`;
+}
+function togglePersonProject(psid,pid,checked){
+  let p=getProject(pid);
+  if(!p)return;
+  if(!p.personIds)p.personIds=[];
+  if(checked&&!p.personIds.includes(psid))p.personIds.push(psid);
+  if(!checked)p.personIds=p.personIds.filter(x=>x!==psid);
+  save();
+}
+function addPerson(){
+  let colorOpts=COLORS.map(c=>`<span class="${c==='#10b981'?'sel':''}" style="background:${c}" onclick="this.parentElement.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));this.classList.add('sel');document.getElementById('psColor').value=this.style.background"></span>`).join('');
+  showModal(`<div class="modal-hd">New Person<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <div class="form-row"><label>Name</label><input type="text" id="psName" autofocus></div>
+      <div class="form-row"><label>Color</label><input type="hidden" id="psColor" value="#10b981"><div class="color-pick">${colorOpts}</div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doAddPerson()">Add</button></div>`);
+  setTimeout(()=>{let el=document.getElementById('psName');if(el)el.onkeydown=e=>{if(e.key==='Enter')doAddPerson()}},50);
+}
+function doAddPerson(){let name=document.getElementById('psName').value.trim();if(!name){showToast('Please enter a name');return}S.persons.push({id:uid(),name,color:document.getElementById('psColor').value});save();hideModal();render();showToast('Added')}
+function editPerson(id){let p=getPerson(id);let colorOpts=COLORS.map(c=>`<span class="${c===p.color?'sel':''}" style="background:${c}" onclick="this.parentElement.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));this.classList.add('sel');document.getElementById('psColor2').value=this.style.background"></span>`).join('');
+  showModal(`<div class="modal-hd">Edit Person<span class="close" onclick="hideModal()">&times;</span></div><div class="modal-bd"><div class="form-row"><label>Name</label><input type="text" id="psName2" value="${esc(p.name)}"></div><div class="form-row"><label>Color</label><input type="hidden" id="psColor2" value="${p.color}"><div class="color-pick">${colorOpts}</div></div></div><div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doEditPerson('${id}')">Save</button></div>`)}
+function doEditPerson(id){let p=getPerson(id);p.name=document.getElementById('psName2').value.trim()||p.name;p.color=document.getElementById('psColor2').value;save();hideModal();render();showToast('Saved')}
+function deletePerson(id){showConfirm('Delete this person?',()=>{S.persons=S.persons.filter(p=>p.id!==id);S.projects.forEach(p=>{if(p.personIds)p.personIds=p.personIds.filter(x=>x!==id)});for(let bid in S.records)S.records[bid].forEach(r=>{for(let b of S.boards){let pf=getPersonField(b);if(pf&&r[pf.id]===id)r[pf.id]=''}});save();render();showToast('Deleted')})}
+
+function renderMgmtBoards(){
+  let list='';
+  for(let b of S.boards){
+    let recCount=getBoardRecords(b.id).length;
+    list+=`<div class="mgmt-item">
+      <span style="font-size:18px">${b.icon}</span>
+      <span class="mgmt-item-name">${esc(b.name)}</span>
+      <span class="mgmt-item-meta">${b.fields.length} fields · ${recCount} records</span>
+      <button class="btn btn-sec btn-sm" onclick="editBoard('${b.id}')">Edit Fields</button>
+      <button class="btn btn-dan btn-sm" onclick="deleteBoard('${b.id}')">Delete</button>
+    </div>`;
+  }
+  return `<div class="mgmt-section">
+    <div class="section-title">Boards <button class="btn btn-sm st-action" onclick="addBoard()">+ New Board</button></div>
+    <div class="mgmt-list">${list}</div>
+  </div>`;
+}
+function addBoard(){
+  let iconOpts=['📋','📦','🏷️','🤝','📊','💡','🔔','⭐','📈','🎯'].map(i=>`<span style="font-size:20px;cursor:pointer;padding:4px;border-radius:4px" onclick="this.parentElement.querySelectorAll('span').forEach(s=>s.style.background='');this.style.background='var(--pri-l)';document.getElementById('bdIcon').value=this.textContent">${i}</span>`).join('');
+  showModal(`<div class="modal-hd">New Board<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <div class="form-row"><label>Board Name</label><input type="text" id="bdName" autofocus></div>
+      <div class="form-row"><label>Icon</label><input type="hidden" id="bdIcon" value="📋"><div style="display:flex;flex-wrap:wrap;gap:4px">${iconOpts}</div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn" onclick="doAddBoard()">Add</button></div>`);
+  setTimeout(()=>{let el=document.getElementById('bdName');if(el)el.onkeydown=e=>{if(e.key==='Enter')doAddBoard()}},50);
+}
+function doAddBoard(){let name=document.getElementById('bdName').value.trim();if(!name){showToast('Please enter a board name');return}let id=uid();S.boards.push({id,name,icon:document.getElementById('bdIcon').value,fields:[{id:'f1',name:'Name',type:'text',required:true}]});S.records[id]=[];S.projects.forEach(p=>{if(!p.boardIds)p.boardIds=S.boards.map(b=>b.id);p.boardIds.push(id)});save();hideModal();render();showToast('Board added')}
+function editBoard(id){let b=getBoard(id);let fieldsHtml=b.fields.map(f=>renderFieldEditor(b.id,f)).join('');
+  showModal(`<div class="modal-hd">Edit Fields · ${b.icon} ${esc(b.name)}<span class="close" onclick="hideModal()">&times;</span></div>
+    <div class="modal-bd">
+      <div style="margin-bottom:12px;font-size:13px;color:var(--mut)">Click field name to edit. Dropdown options can be added/removed with colors.</div>
+      <div id="fieldList">${fieldsHtml}</div>
+      <button class="btn btn-sec btn-sm" style="margin-top:8px" onclick="addField('${id}')">+ Add Field</button>
+    </div>
+    <div class="modal-ft"><button class="btn" onclick="hideModal()">Done</button></div>`,true)}
+function renderFieldEditor(bid,f){
+  let typeOpts=['text','date','number','select','person','textarea'].map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${t}</option>`).join('');
+  let extra='';
+  if(f.type==='select'){
+    let optsHtml=(f.options||[]).map((o,i)=>`<div class="opt-row"><input type="text" value="${esc(o.value)}" oninput="updateOpt('${bid}','${f.id}',${i},'value',this.value)"><div class="color-pick">${COLORS.map(c=>`<span class="${o.color===c?'sel':''}" style="background:${c}" onclick="updateOpt('${bid}','${f.id}',${i},'color','${c}');this.parentElement.querySelectorAll('span').forEach(s=>s.classList.remove('sel'));this.classList.add('sel')"></span>`).join('')}</div><button class="btn btn-dan btn-sm" onclick="deleteOpt('${bid}','${f.id}',${i})">×</button></div>`).join('');
+    extra=`<div style="margin-top:6px;padding-left:16px">${optsHtml}<button class="btn btn-sec btn-sm" style="margin-top:4px" onclick="addOpt('${bid}','${f.id}')">+ Add Option</button></div>`;
+  }
+  let checks='';
+  if(f.type==='number')checks+=`<label class="checkbox-row"><input type="checkbox" ${f.isProgress?'checked':''} onchange="toggleFieldFlag('${bid}','${f.id}','isProgress',this.checked)"> Progress Bar</label>`;
+  if(f.type==='select')checks+=`<label class="checkbox-row"><input type="checkbox" ${f.isStatus?'checked':''} onchange="toggleFieldFlag('${bid}','${f.id}','isStatus',this.checked)"> Status Field</label>`;
+  return `<div class="field-row">
+    <input type="text" value="${esc(f.name)}" style="width:120px;font-weight:600" oninput="updateFieldName('${bid}','${f.id}',this.value)">
+    <select onchange="changeFieldType('${bid}','${f.id}',this.value)">${typeOpts}</select>
+    <label class="checkbox-row"><input type="checkbox" ${f.required?'checked':''} onchange="toggleFieldFlag('${bid}','${f.id}','required',this.checked)"> Required</label>
+    ${checks}
+    <button class="btn btn-dan btn-sm" onclick="deleteField('${bid}','${f.id}')" style="margin-left:auto">×</button>
+    ${extra}
+  </div>`;
+}
+function updateFieldName(bid,fid,val){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f){f.name=val;save();renderTopbar();renderTabs()}}
+function changeFieldType(bid,fid,val){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f){f.type=val;if(val==='select'&&!f.options)f.options=[{value:'Option 1',color:'#94a3b8'}];save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(ff=>renderFieldEditor(bid,ff)).join('')}}
+function toggleFieldFlag(bid,fid,flag,checked){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f){f[flag]=checked;save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(ff=>renderFieldEditor(bid,ff)).join('')}}
+function addField(bid){let b=getBoard(bid);b.fields.push({id:uid(),name:'New Field',type:'text'});save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(f=>renderFieldEditor(bid,f)).join('')}
+function deleteField(bid,fid){showConfirm('Delete this field? Related data will be lost.',()=>{let b=getBoard(bid);b.fields=b.fields.filter(f=>f.id!==fid);getBoardRecords(bid).forEach(r=>delete r[fid]);save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(f=>renderFieldEditor(bid,f)).join('');showToast('Deleted')})}
+function addOpt(bid,fid){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f&&f.type==='select'){f.options.push({value:'New Option',color:COLORS[f.options.length%COLORS.length]});save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(ff=>renderFieldEditor(bid,ff)).join('')}}
+function updateOpt(bid,fid,idx,key,val){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f&&f.options&&f.options[idx]){f.options[idx][key]=val;save()}}
+function deleteOpt(bid,fid,idx){let b=getBoard(bid),f=b.fields.find(x=>x.id===fid);if(f&&f.options){f.options.splice(idx,1);save();let el=document.getElementById('fieldList');if(el)el.innerHTML=b.fields.map(ff=>renderFieldEditor(bid,ff)).join('')}}
+function deleteBoard(id){showConfirm('Delete this board? All data will be lost.',()=>{S.boards=S.boards.filter(b=>b.id!==id);delete S.records[id];S.projects.forEach(p=>{if(p.boardIds)p.boardIds=p.boardIds.filter(x=>x!==id)});if(U.tab===id)U.tab='dashboard';save();render();showToast('Deleted')})}
+
+function renderMgmtData(){
+  let totalRecords=0;
+  for(let bid in S.records)totalRecords+=S.records[bid].length;
+  return `<div class="mgmt-section">
+    <div class="section-title">Data Overview</div>
+    <div class="dash-cards">
+      <div class="dcard"><div class="dcard-label">Projects</div><div class="dcard-val">${S.projects.length}</div></div>
+      <div class="dcard"><div class="dcard-label">Persons</div><div class="dcard-val">${S.persons.length}</div></div>
+      <div class="dcard"><div class="dcard-label">Boards</div><div class="dcard-val">${S.boards.length}</div></div>
+      <div class="dcard"><div class="dcard-label">Total Records</div><div class="dcard-val">${totalRecords}</div></div>
+      <div class="dcard"><div class="dcard-label">Flowcharts</div><div class="dcard-val">${S.flowcharts.length}</div></div>
+    </div>
+  </div>
+  <div class="mgmt-section">
+    <div class="section-title">Backup & Restore</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn" onclick="exportJSON()">Export JSON Backup</button>
+      <button class="btn btn-sec" onclick="importJSON()">Import Backup</button>
+      <button class="btn btn-sec" onclick="exportAllCSV()">Export All CSV</button>
+    </div>
+    <div style="margin-top:16px;border-top:1px solid var(--bdr);padding-top:16px">
+      <button class="btn btn-dan" onclick="clearAllData()">Clear All Data</button>
+      <p style="font-size:12px;color:var(--mut);margin-top:8px">${U.syncMode==='online'?'Server mode: data is stored on the server and shared with all colleagues.':U.syncMode==='cloud'?'Cloud sync mode: data is synced via cloud, shared with everyone in the same room.':'Local mode: data is stored in this browser. Click "Create Room" at the top to enable collaboration.'}</p>
+    </div>
+  </div>`;
+}
+
+// ===== EXPORT/IMPORT =====
+function exportJSON(){
+  let blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tracker-backup-${todayStr()}.json`;a.click();showToast('Exported')
+}
+function importJSON(){
+  let inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=()=>{
+    let f=inp.files[0];if(!f)return;let reader=new FileReader();
+    reader.onload=()=>{
+      try{let data=JSON.parse(reader.result);if(!data.boards)throw 0;showConfirm('Importing will overwrite all current data. Continue?',()=>{S=data;save();render();showToast('Imported')})}
+      catch{showToast('Invalid file format')}
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+function exportCSV(bid){
+  let b=getBoard(bid),recs=getBoardRecords(bid);
+  let header=b.fields.map(f=>esc(f.name)).join(',');
+  let rows=recs.map(r=>b.fields.map(f=>{
+    let v=r[f.id]??'';
+    if(f.type==='person'){let p=getPerson(v);v=p?p.name:''}
+    v=String(v).replace(/"/g,'""');
+    return /[",\n]/.test(v)?`"${v}"`:v;
+  }).join(','));
+  let csv='\ufeff'+header+'\n'+rows.join('\n');
+  let blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${b.name}-${todayStr()}.csv`;a.click();showToast('Exported')
+}
+function exportAllCSV(){
+  for(let b of S.boards)exportCSV(b.id);
+}
+function clearAllData(){
+  showConfirm('Clear all data? This cannot be undone!',()=>{
+    showConfirm('Final confirmation: really clear all data?',()=>{
+      S=getDefaultData();save();render();showToast('Reset to default data');
+    });
+  });
+}
+
+// ===== MODAL =====
+function showModal(html,wide){
+  document.getElementById('modalRoot').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)hideModal()"><div class="modal" style="${wide?'max-width:700px':''}">${html}</div></div>`;
+}
+function hideModal(){document.getElementById('modalRoot').innerHTML=''}
+let _confirmCb = null;
+function showConfirm(msg,onYes){
+  _confirmCb = onYes;
+  showModal(`<div class="modal" style="max-width:400px"><div class="modal-bd"><p style="font-size:14px;line-height:1.6">${esc(msg)}</p></div><div class="modal-ft"><button class="btn btn-sec" onclick="hideModal()">Cancel</button><button class="btn btn-dan" onclick="doConfirm()">Confirm</button></div></div>`);
+}
+function doConfirm(){ let cb=_confirmCb; _confirmCb=null; hideModal(); if(cb)cb(); }
+
+// ===== EVENT SETUP =====
+function setupEvents(){
+  document.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape')hideModal();
+    if(e.key==='Delete'&&U.tab==='flowchart'&&U.fcSelected){deleteFcItem()}
+    if((e.ctrlKey||e.metaKey)&&e.key==='n'){let b=getBoard(U.tab);if(b){e.preventDefault();showAddRecord(b.id)}}
+  });
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
