@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>叠映揽月轩 8-602 · 装修进度台</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --accent:#B45309; --accent-light:#FFF7ED;
+    --hard:#B45309; --custom:#0F766E; --soft:#7C3AED;
+    --red:#DC2626; --red-bg:#FEF2F2;
+    --green:#15803D;
+    --ink:#1F2937; --sub:#6B7280; --line:#E5E7EB;
+    --card:#FFFFFF; --bg:#F6F4F1;
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    padding:16px; padding-bottom:calc(24px + env(safe-area-inset-bottom));
+    max-width:1080px; margin:0 auto;
+  }
+  .card { background:var(--card); border-radius:14px; padding:16px 18px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  h1 { font-size:22px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  h2 { font-size:16px; display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .sub { color:var(--sub); font-size:13px; }
+  .icon { width:18px; height:18px; flex:none; vertical-align:-3px; }
+
+  /* 顶部 */
+  .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; }
+  button {
+    font-family:inherit; font-size:14px; border:1px solid var(--line); background:#fff;
+    color:var(--ink); border-radius:10px; padding:9px 14px; min-height:44px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; transition:all .15s;
+  }
+  button:hover { border-color:var(--accent); color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.primary:hover { opacity:.9; }
+  button.danger { color:var(--red); border-color:#FECACA; }
+  button.danger:hover { background:var(--red-bg); }
+  button.small { min-height:36px; padding:5px 10px; font-size:13px; border-radius:8px; }
+  input, select, textarea {
+    font-family:inherit; font-size:16px; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; width:100%; background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  label { font-size:13px; color:var(--sub); display:block; margin:10px 0 4px; }
+
+  /* 今天要处理 */
+  .today-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+    border:1px solid var(--line); margin-bottom:8px; flex-wrap:wrap;
+  }
+  .today-item.overdue { border-color:#FECACA; background:var(--red-bg); }
+  .today-item .name { flex:1; min-width:160px; font-weight:500; }
+  .tag { font-size:12px; padding:2px 10px; border-radius:999px; color:#fff; flex:none; }
+  .tag.hard { background:var(--hard); } .tag.custom { background:var(--custom); } .tag.soft { background:var(--soft); }
+  .tag.overdue-tag { background:var(--red); }
+  .tag.today-tag { background:var(--accent); }
+  .date-chip { font-size:12px; color:var(--sub); white-space:nowrap; }
+
+  /* 阶段时间轴 */
+  .next-card {
+    background:linear-gradient(135deg,#FFF7ED,#FFFBF5); border:1px solid #FED7AA;
+    border-radius:12px; padding:14px 16px; margin-bottom:16px;
+  }
+  .next-card .big { font-size:18px; font-weight:700; color:var(--accent); margin:2px 0 6px; }
+  .next-line { font-size:13px; color:var(--sub); }
+  .next-line b { color:var(--ink); }
+  .timeline { position:relative; padding-left:26px; }
+  .timeline::before { content:''; position:absolute; left:8px; top:6px; bottom:6px; width:2px; background:var(--line); }
+  .tl-item { position:relative; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .tl-item:last-child { border-bottom:none; }
+  .tl-item::before {
+    content:''; position:absolute; left:-24px; top:14px; width:12px; height:12px; border-radius:50%;
+    background:#fff; border:3px solid var(--line);
+  }
+  .tl-item.done::before { border-color:var(--green); background:var(--green); }
+  .tl-item.doing::before { border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px var(--accent-light); }
+  .tl-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; cursor:pointer; }
+  .tl-name { font-weight:500; }
+  .tl-item.done .tl-name { color:var(--sub); text-decoration:line-through; }
+  .tl-item.doing .tl-name { color:var(--accent); font-weight:700; }
+  .tl-meta { font-size:12px; color:var(--sub); margin-left:auto; white-space:nowrap; }
+  .tl-note { font-size:12px; color:var(--sub); background:#FAFAF9; border-radius:8px; padding:6px 10px; margin-top:6px; display:none; }
+  .tl-item.open .tl-note { display:block; }
+  .status-dot { font-size:12px; padding:1px 8px; border-radius:999px; border:1px solid var(--line); color:var(--sub); }
+  .status-dot.done { color:var(--green); border-color:#BBF7D0; background:#F0FDF4; }
+  .status-dot.doing { color:var(--accent); border-color:#FED7AA; background:#FFF7ED; }
+
+  /* 清单 */
+  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tab { border-radius:999px; min-height:38px; padding:6px 16px; font-size:14px; }
+  .tab.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .task-item {
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:#fff;
+  }
+  .task-item.doing { border-color:#FED7AA; background:#FFFBF5; }
+  .task-item.done { opacity:.65; }
+  .task-item.done .t-name { text-decoration:line-through; }
+  .task-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .t-name { font-weight:500; flex:1; min-width:140px; }
+  .t-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--sub); margin-top:6px; }
+  .t-ops { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .t-ops button { min-height:34px; padding:4px 10px; font-size:12px; border-radius:8px; }
+
+  /* 看板 */
+  .dash { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+  .ring-box { position:relative; width:150px; height:150px; flex:none; margin:0 auto; }
+  .ring-box svg { transform:rotate(-90deg); }
+  .ring-txt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-txt .pct { font-size:26px; font-weight:700; color:var(--accent); }
+  .ring-txt .lbl { font-size:12px; color:var(--sub); }
+  .stats { flex:1; min-width:240px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat { background:#FAFAF9; border-radius:10px; padding:10px 12px; }
+  .stat .v { font-size:17px; font-weight:700; }
+  .stat .k { font-size:12px; color:var(--sub); }
+  .bars { margin-top:6px; }
+  .bar-row { margin-bottom:12px; }
+  .bar-row .bar-head { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+  .bar-track { height:10px; background:#F0EEEA; border-radius:999px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:999px; transition:width .4s; }
+
+  footer { text-align:center; color:var(--sub); font-size:12px; padding:8px 0 16px; }
+
+  /* 弹窗 */
+  .mask { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .mask.show { display:flex; }
+  .modal { background:#fff; border-radius:16px; padding:20px; width:100%; max-width:420px; max-height:90vh; overflow:auto; }
+  .modal h3 { margin-bottom:6px; font-size:17px; }
+  .modal-btns { display:flex; gap:10px; margin-top:18px; }
+  .modal-btns button { flex:1; justify-content:center; }
+  .toast { position:fixed; left:50%; bottom:40px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 20px; border-radius:999px; font-size:14px; opacity:0; transition:opacity .3s; z-index:99; pointer-events:none; }
+  .toast.show { opacity:1; }
+
+  @media (max-width:768px) {
+    body { padding:12px; }
+    h1 { font-size:19px; }
+    .stats { grid-template-columns:1fr 1fr; }
+    .tl-meta { margin-left:0; width:100%; }
+    .topbar { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 头部 ===== -->
+<div class="card topbar">
+  <div>
+    <h1>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+      装修进度台
+    </h1>
+    <div class="sub">叠映揽月轩 8-602 · 精装改造 + 全屋定制 + 软装进场</div>
+    <div class="sub" style="margin-top:4px">报价参考：局改硬装 ¥56,230 · M77 木作折后 ¥388,532</div>
+  </div>
+  <div class="btnrow">
+    <button id="btnExport">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      导出JSON备份
+    </button>
+    <button id="btnImport">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      导入恢复
+    </button>
+    <button class="danger" id="btnClear">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      清空数据
+    </button>
+  </div>
+</div>
+<input type="file" id="fileInput" accept=".json" style="display:none">
+
+<!-- ===== 今天要处理 ===== -->
+<div class="card">
+  <h2>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    今天要处理
+  </h2>
+  <div id="todayBox"></div>
+  <div class="sub" style="margin-top:6px">逾期未完成标红 · 昨天没做完的会一直留在这里，完成后自动消失</div>
+</div>
+
+<!-- ===== 下一步骤 ===== -->
+<div class="next-card" id="nextCard"></div>
+
+<!-- ===== 模块1：阶段步骤时间轴 ===== -->
+<div class="card">
+  <h2>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    装修阶段步骤
+  </h2>
+  <div class="sub" style="margin-bottom:10px">点击条目展开项目明细 · 时间与内容均可编辑（见下方项目清单）</div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<!-- ===== 模块2：项目清单 ===== -->
+<div class="card">
+  <h2>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    项目清单
+  </h2>
+  <div class="tabs" id="catTabs">
+    <button class="tab active" data-cat="all">全部</button>
+    <button class="tab" data-cat="hard">硬装改造</button>
+    <button class="tab" data-cat="custom">全屋定制</button>
+    <button class="tab" data-cat="soft">软装家电</button>
+  </div>
+  <div id="taskList"></div>
+  <button class="primary" id="btnAdd" style="width:100%; justify-content:center; margin-top:6px">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    添加项目
+  </button>
+</div>
+
+<!-- ===== 模块3：进度看板 ===== -->
+<div class="card">
+  <h2>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+    进度看板
+  </h2>
+  <div class="dash">
+    <div class="ring-box">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle cx="75" cy="75" r="62" fill="none" stroke="#F0EEEA" stroke-width="12"/>
+        <circle id="ringArc" cx="75" cy="75" r="62" fill="none" stroke="#B45309" stroke-width="12"
+                stroke-linecap="round" stroke-dasharray="0 999"/>
+      </svg>
+      <div class="ring-txt"><div class="pct" id="ringPct">0%</div><div class="lbl">总体进度</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="stTotal">-</div><div class="k">预计总工期（天）</div></div>
+      <div class="stat"><div class="v" id="stEnd">-</div><div class="k">预计完工日</div></div>
+      <div class="stat"><div class="v" id="stUsed">-</div><div class="k">开工至今天数</div></div>
+      <div class="stat"><div class="v" id="stLeft">-</div><div class="k">距完工剩余（天）</div></div>
+    </div>
+  </div>
+  <div class="bars" id="catBars"></div>
+</div>
+
+<footer>数据保存在本机浏览器 · 建议每周点一次「导出JSON备份」· 精装房局改顺序可能按现场微调</footer>
+
+<!-- ===== 编辑弹窗 ===== -->
+<div class="mask" id="editMask">
+  <div class="modal">
+    <h3 id="modalTitle">添加项目</h3>
+    <label>项目名称</label>
+    <input id="fName" placeholder="如：灯具安装">
+    <label>类别</label>
+    <select id="fCat">
+      <option value="hard">硬装改造</option>
+      <option value="custom">全屋定制</option>
+      <option value="soft">软装家电</option>
+    </select>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1"><label>开始日期</label><input type="date" id="fStart"></div>
+      <div style="flex:1"><label>预估天数</label><input type="number" id="fDays" min="1" step="1" value="1"></div>
+    </div>
+    <label>状态</label>
+    <select id="fStatus">
+      <option value="pending">未开始</option>
+      <option value="doing">进行中</option>
+      <option value="done">已完成</option>
+    </select>
+    <label>备注 / 项目明细</label>
+    <textarea id="fNote" rows="3" placeholder="具体内容，如：北次卧/书房/公卫单开门×3、主卧&南次卧隐形门"></textarea>
+    <div class="modal-btns">
+      <button id="btnCancel">取消</button>
+      <button class="primary" id="btnSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 二次确认弹窗 ===== -->
+<div class="mask" id="confirmMask">
+  <div class="modal">
+    <h3 style="color:var(--red)">确认操作</h3>
+    <p id="confirmText" style="font-size:14px"></p>
+    <div class="modal-btns">
+      <button id="confirmCancel">取消</button>
+      <button class="danger" id="confirmOk">确认执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+var KEY = 'wb_reno_8602_data';
+var CATS = { hard:'硬装改造', custom:'全屋定制', soft:'软装家电' };
+var CAT_COLORS = { hard:'#B45309', custom:'#0F766E', soft:'#7C3AED' };
+var STATUS_TXT = { pending:'未开始', doing:'进行中', done:'已完成' };
+
+// ===== 预置项目数据（源自两份报价单 + 软装规划） =====
+function defaultTasks(){
+  return [
+    { id:'t01', cat:'hard',   name:'合同确认与定金支付', start:'2026-08-28', days:1,  status:'pending', note:'局改合同 + M77木作合同确认，支付定金' },
+    { id:'t02', cat:'hard',   name:'开工准备与成品保护', start:'2026-09-07', days:1,  status:'pending', note:'143㎡成品保护（¥18/㎡）；材料进场、与物业报备' },
+    { id:'t03', cat:'hard',   name:'拆除工程',           start:'2026-09-08', days:2,  status:'pending', note:'客厅电视背景、阳台地砖、全部墙布、主卧床背景、房门×5、进门鞋柜、客餐厅玄关过道阳台吊顶拆除' },
+    { id:'t04', cat:'hard',   name:'水电改造',           start:'2026-09-10', days:3,  status:'pending', note:'电源改造51.1㎡（含阳台洗衣池给排水）；3卧室+书房增加电源、灯线' },
+    { id:'t05', cat:'custom', name:'全屋定制复尺与下单', start:'2026-09-14', days:2,  status:'pending', note:'拆除完成后 M77 上门复尺，确认图纸后工厂下单生产' },
+    { id:'t06', cat:'hard',   name:'吊顶工程',           start:'2026-09-13', days:5,  status:'pending', note:'轻钢龙骨异形吊顶51.1㎡、欧松板基层、回光灯槽17.6m、石膏板饰面、天棚腻子' },
+    { id:'t07', cat:'hard',   name:'木饰面及门套基层',   start:'2026-09-18', days:2,  status:'pending', note:'木饰面造型欧松板基层15.44㎡；门套基层×5（为隐形门/护墙做准备）' },
+    { id:'t08', cat:'hard',   name:'阳台工程',           start:'2026-09-20', days:4,  status:'pending', note:'地面找平、防水17㎡（上翻30cm）、干铺垫层、大理石防渗+背胶+铺贴' },
+    { id:'t09', cat:'hard',   name:'墙顶面乳胶修复',     start:'2026-09-24', days:3,  status:'pending', note:'3卧室+书房墙顶面乳胶修复×4' },
+    { id:'t10', cat:'custom', name:'全屋定制工厂生产',   start:'2026-09-16', days:45, status:'pending', note:'房门5樘+厨房双移门、木饰面护墙、全屋柜体（生产期约45天，与硬装并行）' },
+    { id:'t11', cat:'hard',   name:'收尾安装',           start:'2026-09-27', days:2,  status:'pending', note:'改造后插座复位、全部筒灯更换及灯带安装' },
+    { id:'t12', cat:'hard',   name:'硬装垃圾清运',       start:'2026-09-29', days:1,  status:'pending', note:'建筑垃圾外运约3车' },
+    { id:'t13', cat:'custom', name:'定制安装：房门',     start:'2026-10-31', days:2,  status:'pending', note:'北次卧/北书房/公卫单开门×3、主卧+南次卧隐形门（拼色）、厨房双移门（铝框玻璃）+双面套' },
+    { id:'t14', cat:'custom', name:'定制安装：木饰面',   start:'2026-11-02', days:2,  status:'pending', note:'客餐厅D面/B面门边护墙、玄关银镜、猫柜侧面银镜、南次卧半腰床背景、主卧床背景、床头抽屉柜' },
+    { id:'t15', cat:'custom', name:'定制安装：全屋柜体', start:'2026-11-04', days:3,  status:'pending', note:'猫猫柜、沙发背景柜、咖啡机柜、电视柜、玄关悬浮钥匙柜+衣柜、南次卧衣柜+悬浮床头柜、主卧衣柜+飘窗开放柜、书房书桌+书柜、阳台洗烘柜；现场油漆维修' },
+    { id:'t16', cat:'hard',   name:'开荒保洁',           start:'2026-11-09', days:1,  status:'pending', note:'全屋开荒保洁143㎡（¥15/㎡）' },
+    { id:'t17', cat:'soft',   name:'软装家具进场',       start:'2026-11-10', days:3,  status:'pending', note:'沙发、餐桌椅、床架床垫等自选家具进场摆放' },
+    { id:'t18', cat:'soft',   name:'家电进场安装',       start:'2026-11-13', days:2,  status:'pending', note:'冰箱/洗烘套装/电视/空调等家电配送安装，接入水电网' },
+    { id:'t19', cat:'soft',   name:'灯具窗帘及挂饰安装', start:'2026-11-15', days:2,  status:'pending', note:'窗帘轨道+窗帘、装饰画、镜柜挂件等收尾安装' },
+    { id:'t20', cat:'soft',   name:'通风散味与入住准备', start:'2026-11-17', days:14, status:'pending', note:'持续通风散味，视情况安排检测；网络开通、物业过户等入住手续' }
+  ];
+}
+
+var state = load();
+function load(){
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.tasks)) return d;
+    }
+  } catch(e){}
+  return { tasks: defaultTasks() };
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+// ===== 工具 =====
+function fmtDate(s){ return s || '-'; }
+function addDays(dateStr, n){
+  var d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n - 1);
+  var m = ('0'+(d.getMonth()+1)).slice(-2), day = ('0'+d.getDate()).slice(-2);
+  return d.getFullYear()+'-'+m+'-'+day;
+}
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+}
+function diffDays(a, b){ // b - a in days
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+}
+function sortedTasks(){ return state.tasks.slice().sort(function(a,b){ return a.start < b.start ? -1 : a.start > b.start ? 1 : 0; }); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+// ===== 今天要处理 =====
+function renderToday(){
+  var today = todayStr(), box = document.getElementById('todayBox'), html = '';
+  var list = sortedTasks().filter(function(t){
+    return t.status !== 'done' && t.start <= today;
+  });
+  if (!list.length) {
+    box.innerHTML = '<div class="sub" style="padding:8px 0">今天没有待处理事项，进度正常推进中。</div>';
+    return;
+  }
+  list.forEach(function(t){
+    var end = addDays(t.start, t.days), overdue = end < today;
+    html += '<div class="today-item' + (overdue ? ' overdue' : '') + '">'
+      + '<span class="tag ' + t.cat + '">' + CATS[t.cat] + '</span>'
+      + (overdue ? '<span class="tag overdue-tag">已逾期 ' + (diffDays(end, today)) + ' 天</span>' : '<span class="tag today-tag">该做啦</span>')
+      + '<span class="name">' + esc(t.name) + '</span>'
+      + '<span class="date-chip">' + t.start + ' ~ ' + end + '</span>'
+      + '<button class="small primary" onclick="quickDone(\'' + t.id + '\')">完成</button>'
+      + '</div>';
+  });
+  box.innerHTML = html;
+}
+window.quickDone = function(id){
+  var t = state.tasks.find(function(x){ return x.id === id; });
+  if (t) { t.status = 'done'; save(); renderAll(); toast('已完成：' + t.name); }
+};
+
+// ===== 下一步骤卡片 =====
+function renderNext(){
+  var sorted = sortedTasks();
+  var cur = sorted.find(function(t){ return t.status !== 'done'; });
+  var el = document.getElementById('nextCard');
+  if (!cur) {
+    el.innerHTML = '<div class="big">全部完成，欢迎入住！</div><div class="next-line">所有装修项目均已完成。</div>';
+    return;
+  }
+  var after = sorted.filter(function(t){ return t.id !== cur.id && t.status !== 'done'; }).slice(0, 2);
+  var idx = sorted.indexOf(cur) + 1, total = sorted.length;
+  var end = addDays(cur.start, cur.days);
+  var today = todayStr();
+  var stateTxt = cur.start > today ? '（预计 ' + cur.start + ' 开始）' : (end < today ? '（已逾期，请尽快推进）' : '（正在进行的时间窗内）');
+  var nextHtml = after.map(function(t){
+    return '<b>' + esc(t.name) + '</b> <span style="color:#9CA3AF">' + t.start + ' 起 / ' + t.days + '天</span>';
+  }).join('<span style="margin:0 6px;color:#D6D3D1">→</span>') || '<span style="color:#9CA3AF">（最后一个阶段啦）</span>';
+  el.innerHTML =
+    '<div class="next-line">当前阶段（第 ' + idx + ' / ' + total + ' 步）</div>'
+    + '<div class="big">' + esc(cur.name) + '</div>'
+    + '<div class="next-line">类别：' + CATS[cur.cat] + ' · 计划 ' + cur.start + ' ~ ' + end + '（' + cur.days + '天）' + stateTxt + '</div>'
+    + (cur.note ? '<div class="next-line" style="margin-top:6px">要点：' + esc(cur.note) + '</div>' : '')
+    + '<div class="next-line" style="margin-top:10px">接下来：' + nextHtml + '</div>'
+    + '<div style="margin-top:12px"><button class="small primary" onclick="quickDone(\'' + cur.id + '\')">标记本阶段完成，进入下一阶段</button>'
+    + ' <button class="small" onclick="quickDoing(\'' + cur.id + '\')">标记进行中</button></div>';
+}
+window.quickDoing = function(id){
+  var t = state.tasks.find(function(x){ return x.id === id; });
+  if (t) { t.status = 'doing'; save(); renderAll(); toast('已标记进行中：' + t.name); }
+};
+
+// ===== 时间轴 =====
+function renderTimeline(){
+  var today = todayStr(), html = '';
+  sortedTasks().forEach(function(t, i){
+    var end = addDays(t.start, t.days);
+    var cls = t.status === 'done' ? 'done' : (t.status === 'doing' ? 'doing' : '');
+    var overdue = t.status !== 'done' && end < today;
+    html += '<div class="tl-item ' + cls + '" onclick="toggleNote(this)">'
+      + '<div class="tl-head">'
+      + '<span class="tl-name">' + (i+1) + '. ' + esc(t.name) + '</span>'
+      + '<span class="tag ' + t.cat + '" style="font-size:11px">' + CATS[t.cat] + '</span>'
+      + (overdue ? '<span class="tag overdue-tag" style="font-size:11px">逾期</span>' : '')
+      + '<span class="status-dot ' + t.status + '">' + STATUS_TXT[t.status] + '</span>'
+      + '<span class="tl-meta">' + t.start + ' ~ ' + end + ' · ' + t.days + '天</span>'
+      + '</div>'
+      + (t.note ? '<div class="tl-note">' + esc(t.note) + '</div>' : '')
+      + '</div>';
+  });
+  document.getElementById('timeline').innerHTML = html;
+}
+window.toggleNote = function(el){ el.classList.toggle('open'); };
+
+// ===== 项目清单 =====
+var curCat = 'all', editingId = null;
+function renderTasks(){
+  var html = '';
+  var list = sortedTasks().filter(function(t){ return curCat === 'all' || t.cat === curCat; });
+  var today = todayStr();
+  if (!list.length) html = '<div class="sub" style="padding:8px 0">暂无项目，点击下方按钮添加。</div>';
+  list.forEach(function(t){
+    var end = addDays(t.start, t.days);
+    var overdue = t.status !== 'done' && end < today;
+    html += '<div class="task-item ' + t.status + '">'
+      + '<div class="task-top">'
+      + '<span class="tag ' + t.cat + '">' + CATS[t.cat] + '</span>'
+      + '<span class="t-name">' + esc(t.name) + '</span>'
+      + (overdue ? '<span class="tag overdue-tag">逾期</span>' : '')
+      + '</div>'
+      + '<div class="t-meta">'
+      + '<span>' + t.start + ' ~ ' + end + '</span>'
+      + '<span>预估 ' + t.days + ' 天</span>'
+      + '<span>状态：' + STATUS_TXT[t.status] + '</span>'
+      + '</div>'
+      + (t.note ? '<div class="t-meta" style="margin-top:4px; color:#9CA3AF">' + esc(t.note) + '</div>' : '')
+      + '<div class="t-ops">'
+      + '<button class="small" onclick="cycleStatus(\'' + t.id + '\')">切换状态</button>'
+      + '<button class="small" onclick="editTask(\'' + t.id + '\')">'
+      + '<svg class="icon" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>编辑</button>'
+      + '<button class="small danger" onclick="delTask(\'' + t.id + '\')">删除</button>'
+      + '</div></div>';
+  });
+  document.getElementById('taskList').innerHTML = html;
+}
+window.cycleStatus = function(id){
+  var t = state.tasks.find(function(x){ return x.id === id; });
+  if (!t) return;
+  t.status = t.status === 'pending' ? 'doing' : (t.status === 'doing' ? 'done' : 'pending');
+  save(); renderAll();
+};
+window.editTask = function(id){
+  editingId = id;
+  var t = state.tasks.find(function(x){ return x.id === id; });
+  document.getElementById('modalTitle').textContent = '编辑项目';
+  document.getElementById('fName').value = t.name;
+  document.getElementById('fCat').value = t.cat;
+  document.getElementById('fStart').value = t.start;
+  document.getElementById('fDays').value = t.days;
+  document.getElementById('fStatus').value = t.status;
+  document.getElementById('fNote').value = t.note || '';
+  document.getElementById('editMask').classList.add('show');
+};
+window.delTask = function(id){
+  var t = state.tasks.find(function(x){ return x.id === id; });
+  confirmDialog('确定删除项目「' + t.name + '」吗？此操作不可撤销。', function(){
+    state.tasks = state.tasks.filter(function(x){ return x.id !== id; });
+    save(); renderAll(); toast('已删除');
+  });
+};
+
+// ===== 看板 =====
+function renderDash(){
+  var tasks = state.tasks;
+  var totalDays = 0, doneDays = 0;
+  var catStat = { hard:[0,0], custom:[0,0], soft:[0,0] };
+  tasks.forEach(function(t){
+    totalDays += t.days;
+    catStat[t.cat][0] += t.days;
+    if (t.status === 'done') { doneDays += t.days; catStat[t.cat][1] += t.days; }
+  });
+  var pct = totalDays ? Math.round(doneDays / totalDays * 100) : 0;
+  var r = 62, c = 2 * Math.PI * r;
+  document.getElementById('ringArc').setAttribute('stroke-dasharray', (c * pct / 100) + ' ' + c);
+  document.getElementById('ringPct').textContent = pct + '%';
+
+  var sorted = sortedTasks();
+  var start = sorted.length ? sorted[0].start : todayStr();
+  var endAll = sorted.reduce(function(m, t){
+    var e = addDays(t.start, t.days);
+    return e > m ? e : m;
+  }, start);
+  var today = todayStr();
+  document.getElementById('stTotal').textContent = Math.max(diffDays(start, endAll) + 1, 0);
+  document.getElementById('stEnd').textContent = endAll;
+  document.getElementById('stUsed').textContent = Math.max(diffDays(start, today), 0);
+  document.getElementById('stLeft').textContent = Math.max(diffDays(today, endAll), 0);
+
+  var bars = '';
+  Object.keys(CATS).forEach(function(k){
+    var s = catStat[k], p = s[0] ? Math.round(s[1] / s[0] * 100) : 0;
+    bars += '<div class="bar-row"><div class="bar-head"><span>' + CATS[k] + ' <span style="color:#9CA3AF">(' + s[1] + '/' + s[0] + ' 天)</span></span><span>' + p + '%</span></div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:' + p + '%; background:' + CAT_COLORS[k] + '"></div></div></div>';
+  });
+  document.getElementById('catBars').innerHTML = bars;
+}
+
+// ===== 弹窗逻辑 =====
+document.getElementById('btnAdd').onclick = function(){
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '添加项目';
+  document.getElementById('fName').value = '';
+  document.getElementById('fCat').value = curCat === 'all' ? 'hard' : curCat;
+  document.getElementById('fStart').value = todayStr();
+  document.getElementById('fDays').value = 1;
+  document.getElementById('fStatus').value = 'pending';
+  document.getElementById('fNote').value = '';
+  document.getElementById('editMask').classList.add('show');
+};
+document.getElementById('btnCancel').onclick = function(){ document.getElementById('editMask').classList.remove('show'); };
+document.getElementById('btnSave').onclick = function(){
+  var name = document.getElementById('fName').value.trim();
+  if (!name) { toast('请填写项目名称'); return; }
+  var data = {
+    cat: document.getElementById('fCat').value,
+    name: name,
+    start: document.getElementById('fStart').value,
+    days: Math.max(1, parseInt(document.getElementById('fDays').value, 10) || 1),
+    status: document.getElementById('fStatus').value,
+    note: document.getElementById('fNote').value.trim()
+  };
+  if (!data.start) { toast('请选择开始日期'); return; }
+  if (editingId) {
+    var t = state.tasks.find(function(x){ return x.id === editingId; });
+    Object.assign(t, data);
+  } else {
+    data.id = 't' + Date.now();
+    state.tasks.push(data);
+  }
+  save(); renderAll();
+  document.getElementById('editMask').classList.remove('show');
+  toast(editingId ? '已保存修改' : '已添加项目');
+};
+
+// ===== 二次确认 =====
+var confirmCb = null;
+function confirmDialog(text, cb){
+  document.getElementById('confirmText').textContent = text;
+  confirmCb = cb;
+  document.getElementById('confirmMask').classList.add('show');
+}
+document.getElementById('confirmCancel').onclick = function(){ document.getElementById('confirmMask').classList.remove('show'); confirmCb = null; };
+document.getElementById('confirmOk').onclick = function(){
+  document.getElementById('confirmMask').classList.remove('show');
+  if (confirmCb) { confirmCb(); confirmCb = null; }
+};
+
+// ===== 导出 / 导入 / 清空 =====
+document.getElementById('btnExport').onclick = function(){
+  var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '装修进度备份_' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已导出 JSON 备份');
+};
+document.getElementById('btnImport').onclick = function(){ document.getElementById('fileInput').click(); };
+document.getElementById('fileInput').onchange = function(e){
+  var f = e.target.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var d = JSON.parse(reader.result);
+      if (!d || !Array.isArray(d.tasks)) throw new Error('格式不对');
+      confirmDialog('导入将覆盖当前全部 ' + state.tasks.length + ' 条项目，确定继续吗？', function(){
+        state = d; save(); renderAll(); toast('导入成功，共 ' + d.tasks.length + ' 条项目');
+      });
+    } catch (err) { toast('导入失败：文件格式不正确'); }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+};
+document.getElementById('btnClear').onclick = function(){
+  confirmDialog('清空数据将删除所有 ' + state.tasks.length + ' 条项目记录，且不可恢复！建议先导出备份。确定要清空吗？', function(){
+    state = { tasks: [] };
+    save(); renderAll(); toast('已清空全部数据');
+  });
+};
+
+// ===== Tab 切换 =====
+document.getElementById('catTabs').addEventListener('click', function(e){
+  var btn = e.target.closest('.tab');
+  if (!btn) return;
+  curCat = btn.dataset.cat;
+  document.querySelectorAll('#catTabs .tab').forEach(function(b){ b.classList.toggle('active', b === btn); });
+  renderTasks();
+});
+
+function renderAll(){ renderToday(); renderNext(); renderTimeline(); renderTasks(); renderDash(); }
+renderAll();
+</script>
+</body>
+</html>
